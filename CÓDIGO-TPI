@@ -1,2 +1,70 @@
-hola
-chau2
+#include <stdio.h>
+#include <stdlib.h>
+#include <String.h>
+
+typedef struct Respuesta {
+    int Respuesta_Id,Pregunta_Id,Respuesta_Nro;
+    char Respuesta[50];
+    float Ponderacion; // 0 a 1
+    char Elegida;      // 'X' si fue elegida
+} Respuesta;
+
+typedef struct Pregunta {
+    int Pregunta_Id,Encuesta_Id;
+    char Pregunta[50];
+    float Ponderacion; // 0 a 1
+} Pregunta;
+
+typedef struct Encuesta {
+    int Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
+    char Denominacion[50];
+} Encuesta;
+
+typedef struct Marcado {
+    int Pregunta_Id,Respuesta_Id;
+    struct Marcado* sgte; // Puntero al siguiente marcado
+} Marcado;
+
+typedef struct EncuestaResp {
+    int idEncuestaRespondida;
+    int Encuesta_Id;
+    char fecha[30],encuestador[50];
+    Marcado* listaPreguntas; // Lista enlazada de respuestas marcadas
+} EncuestaResp;
+
+int main() {
+	int eleccion=-1;
+	
+	while (eleccion != 0) {
+ 		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Leer/Grabar CSV\n6. Menu principal\n0. Salir\nSeleccione una opcion: ");
+        scanf("%d", &eleccion);
+
+        switch (eleccion) {
+            case 1:
+                printf("Has elegido el modulo: CRUD de Encuestas\n");
+                break;
+            case 2:
+                printf("Has elegido el modulo: CRUD de Preguntas\n");
+                break;
+            case 3:
+                printf("Has elegido el modulo: CRUD de Respuestas\n");
+                break;
+            case 4:
+                printf("Has elegido el modulo: Procesamiento de Encuestas (Archivos)\n");
+                break;
+            case 5:
+                printf("Has elegido el modulo: Leer/Grabar CSV\n");
+                break;
+            case 6:
+                printf("Ya estás en el menu principal.\n");
+                break;
+            case 0:
+                printf("Saliendo del programa...\n");
+                break;
+            default:
+                printf("Opcion inválida. Intente de nuevo.\n");
+        }
+    }
+	
+	return 0;
+}
