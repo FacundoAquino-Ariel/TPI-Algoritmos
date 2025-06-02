@@ -1,23 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <String.h>
+#include <string.h>
 
 typedef struct Respuesta {
     int Respuesta_Id,Pregunta_Id,Respuesta_Nro;
     char Respuesta[50];
     float Ponderacion; // 0 a 1
     char Elegida;      // 'X' si fue elegida
+    struct Respuesta* sgte;
 } Respuesta;
 
 typedef struct Pregunta {
     int Pregunta_Id,Encuesta_Id;
     char Pregunta[50];
     float Ponderacion; // 0 a 1
+    struct Pregunta* sgte;
 } Pregunta;
 
 typedef struct Encuesta {
     int Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
     char Denominacion[50];
+    struct Encuesta* sgte;
 } Encuesta;
 
 typedef struct Marcado {
@@ -30,7 +33,11 @@ typedef struct EncuestaResp {
     int Encuesta_Id;
     char fecha[30],encuestador[50];
     Marcado* listaPreguntas; // Lista enlazada de respuestas marcadas
+    struct EncuestaResp* izq, *der;
 } EncuestaResp;
+
+
+void Crud_Preguntas();
 
 int main() {
 	int eleccion=-1;
@@ -42,29 +49,65 @@ int main() {
         switch (eleccion) {
             case 1:
                 printf("Has elegido el modulo: CRUD de Encuestas\n");
-                break;
+            break;
             case 2:
                 printf("Has elegido el modulo: CRUD de Preguntas\n");
-                break;
+		Crud_Preguntas();
+            break;
             case 3:
                 printf("Has elegido el modulo: CRUD de Respuestas\n");
-                break;
+            break;
             case 4:
                 printf("Has elegido el modulo: Procesamiento de Encuestas (Archivos)\n");
-                break;
+            break;
             case 5:
                 printf("Has elegido el modulo: Leer/Grabar CSV\n");
-                break;
+            break;
             case 6:
                 printf("Ya estás en el menu principal.\n");
-                break;
+            break;
             case 0:
                 printf("Saliendo del programa...\n");
-                break;
+            break;
             default:
                 printf("Opcion inválida. Intente de nuevo.\n");
         }
     }
 	
 	return 0;
+}
+
+
+
+void Crud_Preguntas(){
+		int eleccion=-1;
+	
+	while (eleccion != 0) {
+ 		printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Actualizar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: "); 
+        scanf("%d", &eleccion);
+
+        switch (eleccion) {
+			case 1:
+		        puts("Has elegido el modulo: Crear pregunta");
+		    break;
+		    
+		    case 2:
+		        puts("Has elegido el modulo: Leer pregunta");
+		    break;
+		    case 3:
+		        puts("Has elegido el modulo: Actualizar pregunta");   
+			break;
+			
+		    case 4:
+		        puts("Has elegido el modulo: Borrar pregunta ");
+		    break;
+		    
+		    case 0:
+		        puts("Saliendo del modulo...");
+		    break;
+		    
+		    default:
+		        puts("Opcion inválida. Intente de nuevo.");
+        }
+    }
 }
