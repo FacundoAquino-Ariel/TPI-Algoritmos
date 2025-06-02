@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <String.h>
+#include <string.h>
 
 typedef struct Respuesta {
     int Respuesta_Id,Pregunta_Id,Respuesta_Nro;
@@ -13,11 +13,13 @@ typedef struct Pregunta {
     int Pregunta_Id,Encuesta_Id;
     char Pregunta[50];
     float Ponderacion; // 0 a 1
+    struct Pregunta* sgte;
 } Pregunta;
 
 typedef struct Encuesta {
     int Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
     char Denominacion[50];
+    struct Encuesta* sgte;
 } Encuesta;
 
 typedef struct Marcado {
@@ -30,6 +32,7 @@ typedef struct EncuestaResp {
     int Encuesta_Id;
     char fecha[30],encuestador[50];
     Marcado* listaPreguntas; // Lista enlazada de respuestas marcadas
+    struct EncuestaResp* izq, *der;
 } EncuestaResp;
 
 //----------------|PROTOTIPOS|----------------------------
