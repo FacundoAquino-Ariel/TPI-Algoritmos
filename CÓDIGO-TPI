@@ -3,37 +3,36 @@
 #include <string.h>
 
 typedef struct Respuesta {
-    int Respuesta_Id,Pregunta_Id,Respuesta_Nro;
+    long long Respuesta_Id,Pregunta_Id,Respuesta_Nro;
     char Respuesta[50];
     float Ponderacion; // 0 a 1
     struct Respuesta *sgte;
 } Respuesta;
 
 typedef struct Pregunta {
-    int Pregunta_Id,Encuesta_Id;
+    long long Pregunta_Id,Encuesta_Id;
     char Pregunta[50];
     float Ponderacion; // 0 a 1
     struct Pregunta* sgte;
 } Pregunta;
 
 typedef struct Encuesta {
-    int Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
+    long long Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
     char Denominacion[50];
     struct Encuesta* sgte;
 } Encuesta;
 
 typedef struct Marcado {
-    int Pregunta_Id,Respuesta_Id;
+    long long Pregunta_Id,Respuesta_Id,idEncuestaRespondida;
     struct Marcado* sgte; // Puntero al siguiente marcado
-} Marcado;
+}Marcado;
 
-typedef struct EncuestaResp {
-    int idEncuestaRespondida;
-    int Encuesta_Id;
+struct EncuestaResp {
+    long long idEncuestaRespondida, Encuesta_Id;
     char fecha[30],encuestador[50];
     Marcado* listaPreguntas; // Lista enlazada de respuestas marcadas
     struct EncuestaResp* izq, *der;
-} EncuestaResp;
+}reg,reg2;
 
 //----------------|PROTOTIPOS|----------------------------
 //====|RESPUESTAS|====
