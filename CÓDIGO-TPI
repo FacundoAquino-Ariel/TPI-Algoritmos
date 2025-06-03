@@ -34,8 +34,9 @@ typedef struct EncuestaResp {
     char fecha[30];
     Marcado* listaPreguntas; // Lista enlazada de respuestas marcadas
     struct EncuestaResp* izq, *der;
-}reg,reg2;
-
+}registry;
+registry reg;
+registry reg2;
 //----------------|PUNTEROS FILE|-------------------------
 FILE *encuestas_respondidas_CSV,*marcado;
 
