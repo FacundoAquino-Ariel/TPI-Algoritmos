@@ -1,6 +1,8 @@
 #include <stdio.h>
+#define _CRT_RAND_S
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct Respuesta {
     int Respuesta_Id,Pregunta_Id,Respuesta_Nro;
@@ -43,6 +45,14 @@ void insertarRespuesta(Respuesta **l, Respuesta *nv, Respuesta *r);
 void mostrarRespuestas(Respuesta *l);
 void modificarRespuesta(Respuesta *l, int id);
 void borrarRespuesta(Respuesta **l, int id, Respuesta *r);
+
+void crearEncuesta(Encuesta ** head);
+void borrarEncuesta(Encuesta ** head);
+void modificarEncuesta(Encuesta ** head);
+void leerEncuesta();
+void apilar(Encuesta ** head, Encuesta * node);
+void pilavacia();
+void desapilar();
 
 //====|PREGUNTAS|====
 void Crud_Preguntas();
@@ -306,3 +316,21 @@ void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
 		}
 	}
 }
+
+void crearEncuesta(Encuesta ** head){
+time_t currentTime = time(NULL);
+struct tm *monthYear = localtime(&currentTime); 
+long long randomNumber;
+Encuesta * newNode = malloc(sizeof(Encuesta));
+rand_s(&randomNumber);
+
+printf("Ingresar nombre de la encuesta");
+fgets(newNode->Denominacion, 1, stdin);
+newNode->Encuesta_Anio = monthYear->tm_year + 1900;
+newNode->Encuesta_Mes = monthYear->tm_mon + 1;
+newNode->Procesada = 0;
+newNode->sgte = NULL;
+newNode->Encuesta_Id = randomNumber;
+apilar(newNode, head);
+}
+
