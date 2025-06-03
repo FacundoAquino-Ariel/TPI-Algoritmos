@@ -3,37 +3,39 @@
 #include <string.h>
 
 typedef struct Respuesta {
-    int Respuesta_Id,Pregunta_Id,Respuesta_Nro;
+    long long Respuesta_Id,Pregunta_Id,Respuesta_Nro;
     char Respuesta[50];
     float Ponderacion; // 0 a 1
     struct Respuesta *sgte;
 } Respuesta;
 
 typedef struct Pregunta {
-    int Pregunta_Id,Encuesta_Id;
+    long long Pregunta_Id,Encuesta_Id;
     char Pregunta[50];
     float Ponderacion; // 0 a 1
     struct Pregunta* sgte;
 } Pregunta;
 
 typedef struct Encuesta {
-    int Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
+    long long Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
     char Denominacion[50];
     struct Encuesta* sgte;
 } Encuesta;
 
 typedef struct Marcado {
-    int Pregunta_Id,Respuesta_Id;
+    long long Pregunta_Id,Respuesta_Id;
     struct Marcado* sgte; // Puntero al siguiente marcado
-} Marcado;
+}Marcado;
 
 typedef struct EncuestaResp {
-    int idEncuestaRespondida;
-    int Encuesta_Id;
-    char fecha[30],encuestador[50];
+    long long idEncuestaRespondida, Encuesta_Id,encuestador;
+    char fecha[30];
     Marcado* listaPreguntas; // Lista enlazada de respuestas marcadas
     struct EncuestaResp* izq, *der;
-} EncuestaResp;
+}reg,reg2;
+
+//----------------|PUNTEROS FILE|-------------------------
+FILE *encuestas_respondidas_CSV,*marcado;
 
 //----------------|PROTOTIPOS|----------------------------
 //====|RESPUESTAS|====
@@ -46,6 +48,10 @@ void borrarRespuesta(Respuesta **l, int id, Respuesta *r);
 
 //====|PREGUNTAS|====
 void Crud_Preguntas();
+
+//====|ARBOL|====
+void Agregar_Registro_Encuesta_Respondida();
+void Leer_CSV_Encuestas_Respondidas();
 
 //----------------|MAIN|----------------------------
 int main() {
@@ -73,7 +79,12 @@ int main() {
                 printf("Has elegido el modulo: Procesamiento de Encuestas (Archivos)\n");
                 break;
             case 5:
-                printf("Has elegido el modulo: Leer/Grabar CSV\n");
+	 	puts("Has elegido el modulo: Leer = 1/ Registar = 2 CSV");
+		scanf("%d", &eleccion);
+		if (eleccion == 1 || eleccion == 2) {
+		        (eleccion == 1) ? Leer_CSV_Encuestas_Respondidas() : Agregar_Registro_Encuesta_Respondida();
+		}else
+			puts("Opcion invalida. Intente de nuevo.");
                 break;
             case 6:
                 printf("Ya estás en el menu principal.\n");
@@ -82,13 +93,74 @@ int main() {
                 printf("Saliendo del programa...\n");
                 break;
             default:
-                printf("Opcion inválida. Intente de nuevo.\n");
+                printf("Opcion invalida. Intente de nuevo.\n");
         }
     }
 	
 	return 0;
 }
 //===================================|FUNCIONES|===================================
+
+//===================================|ARBOL|===================================
+void Agregar_Registro_Encuesta_Respondida(){
+	
+	if ((encuestas_respondidas_CSV = fopen("Encuestas_RESPONDIDAS.txt", "a+"))!= NULL) {
+	    puts("\n---Agregar Registro---\n");
+	    
+	    printf("Ingrese ID Encuesta (6 digitos): ");
+	    fflush(stdin);
+		scanf("%lld", &reg2.Encuesta_Id);
+	
+		reg2.listaPreguntas = (Marcado*) malloc(sizeof(Marcado));
+		
+	    printf("Ingrese ID Pregunta (8 digitos): ");
+	    fflush(stdin);
+		scanf("%lld", &reg2.listaPreguntas->Pregunta_Id);
+	
+	    printf("Ingrese ID Respuesta (12 digitos): ");
+	    fflush(stdin);
+		scanf("%lld", &reg2.listaPreguntas->Respuesta_Id);
+		
+		//===================================
+		
+	    
+		printf("Ingrese Fecha (YYYYMMDD): ");
+		fflush(stdin);
+		scanf("%8s", reg2.fecha);
+
+	    printf("Ingrese ID Encuestador (4 digitos): ");
+	    fflush(stdin);
+		scanf("%lld", &reg2.encuestador);
+	
+	    printf("Ingrese ID Encuesta Respondida (12 digitos): ");
+	    fflush(stdin);
+		scanf("%lld", &reg2.idEncuestaRespondida);
+	
+		fprintf(encuestas_respondidas_CSV, "%06lld%08lld%012lld%s%04lld%012lld\n", reg2.Encuesta_Id,reg2.listaPreguntas->Pregunta_Id, reg2.listaPreguntas->Respuesta_Id, reg2.fecha, reg2.encuestador, reg2.idEncuestaRespondida);
+	
+	    fclose(encuestas_respondidas_CSV);
+	    puts("Registro agregado correctamente.");
+		free(reg.listaPreguntas);
+	}else
+		puts("Error.");
+}
+
+void Leer_CSV_Encuestas_Respondidas(){
+    char linea[200];
+    if ((encuestas_respondidas_CSV = fopen("Encuestas_RESPONDIDAS.txt", "r"))!= NULL) {
+	    printf("\n---Registros Leidos---\n");
+	    reg.listaPreguntas = (Marcado*) malloc(sizeof(Marcado));
+	    while (fgets(linea, sizeof(linea), encuestas_respondidas_CSV)) {
+	        // Asume campos separados por coma, todos son fijos
+	        sscanf(linea,"%6lld%8lld%12lld%8s%4lld%12lld", &reg.Encuesta_Id,&reg.listaPreguntas->Pregunta_Id, &reg.listaPreguntas->Respuesta_Id, &reg.fecha, &reg.encuestador, &reg.idEncuestaRespondida);
+	
+	        printf("| Encuesta: %06lld \n| Pregunta: %08lld \n| Respuesta: %012lld \n| Fecha: %s \n| Encuestador: %04lld \n| ID Resp: %012lld\n", reg.Encuesta_Id,reg.listaPreguntas->Pregunta_Id, reg.listaPreguntas->Respuesta_Id, reg.fecha, reg.encuestador, reg.idEncuestaRespondida);
+	    }
+	    fclose(encuestas_respondidas_CSV);
+	    free(reg.listaPreguntas);
+    }else
+		puts("Error.");
+}
 
 //===================================|PREGUNTAS|===================================
 void Crud_Preguntas(){
