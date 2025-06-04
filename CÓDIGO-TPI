@@ -352,7 +352,7 @@ void insertarRespuesta(Respuesta **l, Respuesta *nv, Respuesta *r){
 	if(*l != NULL){
 		if(nv->Respuesta_Id < (*l)->Respuesta_Id){
 			nv->sgte = *l;
-			if(*l == r){
+			if(nv->Respuesta_Id < r->Respuesta_Id){
 				aux = *l;
 				while(aux->sgte != *l){
 					aux = aux->sgte;
@@ -431,23 +431,25 @@ void modificarRespuesta(Respuesta *l, int id){
 void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
 	Respuesta *bor, *ult;
 	if(*l != NULL){
+		printf("%d\n",(*l)->sgte->Respuesta_Id);
 		if((*l)->Respuesta_Id == id){
-			if(*l = r){
+			if(*l == r){
 				ult = *l;
-				while(ult->sgte != *l){
+				while(ult->sgte != r){
 					ult = ult->sgte;
 				}
 				ult->sgte = (*l)->sgte;
 			}
 			bor = *l;
 			*l = (*l)->sgte;
-			if(*l = r){
+			if(*l == bor){
 				*l = NULL;
+				printf("nodo unico\n");
 			}
 			free(bor);
 			printf("|se borro la respuesta|\n");
 		}else{
-			if((*l)->sgte = r){
+			if((*l)->sgte == r){
 				printf("Fin de la lista, no se encontro al nodo\n");
 			}else{
 				borrarRespuesta(&(*l)->sgte,id,r);
@@ -457,6 +459,7 @@ void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
 }
 
 void crearEncuesta(Encuesta ** head){
+
 time_t currentTime = time(NULL);
 struct tm *monthYear = localtime(&currentTime); 
 long long randomNumber;
@@ -471,5 +474,5 @@ newNode->Procesada = 0;
 newNode->sgte = NULL;
 newNode->Encuesta_Id = randomNumber;
 apilar(newNode, head);
-}
 
+}
