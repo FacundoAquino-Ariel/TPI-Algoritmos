@@ -59,7 +59,12 @@ void pilavacia();
 void desapilar();
 
 //====|PREGUNTAS|====
-void Crud_Preguntas();
+void Crud_Preguntas(Pregunta **l, Respuesta **respL);
+void crearPregunta(Pregunta **l);
+Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
+void mostrarPregunta(Pregunta *l);
+void modificarPregunta(Pregunta *l, int id);
+void borrarPregunta(Pregunta **l, int id, Respuesta *r);
 
 //====|ARBOL|====
 void Agregar_Registro_Encuesta_Respondida();
@@ -69,7 +74,8 @@ void mostrar_arbol(registry *r);
 
 //----------------|MAIN|----------------------------
 int main() {
-	
+
+	Pregunta *pregL = NULL;
 	Respuesta *respL = NULL;
 	registry *raiz = NULL;
 	int eleccion=-1;
@@ -84,7 +90,7 @@ int main() {
                 break;
             case 2:
                 printf("Has elegido el modulo: CRUD de Preguntas\n");
-                Crud_Preguntas();
+                Crud_Preguntas(&pregL, &respL);
                 break;
             case 3:
                 printf("Has elegido el modulo: CRUD de Respuestas\n");
@@ -240,27 +246,40 @@ void mostrar_arbol(registry *r) {
 }
 
 //===================================|PREGUNTAS|===================================
-void Crud_Preguntas(){
-		int eleccion=-1;
-	
+void Crud_Preguntas(Pregunta **l, Respuesta **respL){
+	int eleccion=-1;
+	int id=0;
+		
+	printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Modificar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: "); 
+	fflush(stdin);
+    scanf("%d", &eleccion);
 	while (eleccion != 0) {
- 		printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Actualizar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: "); 
-        scanf("%d", &eleccion);
+	
 
         switch (eleccion) {
 			case 1:
 		        puts("Has elegido el modulo: Crear pregunta");
+		        crearPregunta(l);
 		    break;
-		    
+
 		    case 2:
 		        puts("Has elegido el modulo: Leer pregunta");
+		        mostrarPregunta(*l);
 		    break;
+		    
 		    case 3:
-		        puts("Has elegido el modulo: Actualizar pregunta");   
+		        puts("Has elegido el modulo: Modificar pregunta");   
+		        printf("Ingrese ID a modificar: ");
+                scanf("%d", &id);
+                modificarPregunta(*l, id);
 			break;
 			
 		    case 4:
 		        puts("Has elegido el modulo: Borrar pregunta ");
+		        printf("Ingrese ID a borrar: ");
+                int id;
+                scanf("%d", &id);
+                borrarPregunta(l, id, *respL);
 		    break;
 		    
 		    case 0:
@@ -268,11 +287,150 @@ void Crud_Preguntas(){
 		    break;
 		    
 		    default:
-		        puts("Opcion inválida. Intente de nuevo.");
+		        puts("Opcion invalida. Intente de nuevo.");
         }
+        
+		printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Modificar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: ");
+	 	fflush(stdin);
+ 		scanf("%d", &eleccion);
     }
 }
 
+void crearPregunta(Pregunta **l){
+	Pregunta *p;
+	Pregunta *aux;
+	long long nuevoid = 1;
+	
+	p = (Pregunta *) malloc(sizeof(Pregunta));
+	if (p == NULL) {
+        printf("No hay espacio de memoria.\n");
+        return;  
+    }
+    
+    if (*l != NULL) {  
+        aux = *l;     
+        nuevoid = aux->Pregunta_Id; 
+
+
+        while (aux != NULL) {
+            if (aux->Pregunta_Id > nuevoid) {
+                nuevoid = aux->Pregunta_Id;
+            }
+            aux = aux->sgte;
+        }
+        p->Pregunta_Id = nuevoid + 1;  
+    } else {
+        p->Pregunta_Id = 1;  
+    }
+ 	// Pedir datos
+    printf("Ingrese ID de la encuesta asociada: ");
+    scanf("%lld", &p->Encuesta_Id);
+    printf("Ingrese el texto de la pregunta: ");
+    fflush(stdin);
+    fgets(p->Pregunta, 50, stdin);
+    p->Pregunta[strcspn(p->Pregunta, "\n")] = '\0';
+
+    // Validar ponderación
+    float sumaPonderacion = 0.0;
+    Pregunta *temp = *l;
+    while (temp != NULL) {
+        sumaPonderacion += temp->Ponderacion;
+        temp = temp->sgte;
+    }
+
+    printf("Ingrese la ponderación (0.01 a %.2f): ", 1.0 - sumaPonderacion);
+    scanf("%f", &p->Ponderacion);
+    if (sumaPonderacion + p->Ponderacion > 1.0) {
+        printf("Error: La suma de ponderaciones no puede exceder 1.0.\n");
+        free(p);
+        return;
+    }
+
+    // Insertar recursivamente (ordenado por ID)
+    *l = insertarPregunta(p, *l);
+    printf("Pregunta creada con ID: %lld\n", p->Pregunta_Id);
+}
+
+
+Pregunta* insertarPregunta(Pregunta *p, Pregunta *r) {
+    if (r == NULL || p->Pregunta_Id < r->Pregunta_Id) {
+        p->sgte = r;
+        return p;
+    } else {
+        r->sgte = insertarPregunta(p, r->sgte);
+        return r;
+    }
+}
+
+void mostrarPregunta(Pregunta *l){
+	if (l == NULL) {
+        puts("No hay preguntas cargadas.");
+        return;
+    }
+    puts("Lista de preguntas:");
+    while (l != NULL) {
+        printf("\nID: %lld\nEncuesta ID: %lld\nTexto: %s\nPonderación: %.2f\n", l->Pregunta_Id, l->Encuesta_Id, l->Pregunta, l->Ponderacion);
+        l = l->sgte;
+    }
+}
+
+void modificarPregunta(Pregunta *l, int id) {
+    while (l != NULL && l->Pregunta_Id != id) {
+        l = l->sgte;
+    }
+    if (l == NULL) {
+        puts("Pregunta no encontrada.");
+        return;
+    }
+
+    printf("Ingrese nuevo texto para la pregunta: ");
+    fflush(stdin);
+    fgets(l->Pregunta, 50, stdin);
+    l->Pregunta[strcspn(l->Pregunta, "\n")] = '\0';
+
+    printf("Ingrese nueva ponderación: ");
+    float nuevaPond;
+    scanf("%f", &nuevaPond);
+    if (nuevaPond < 0.0 || nuevaPond > 1.0) {
+        puts("Ponderación inválida. Debe estar entre 0 y 1.");
+        return;
+    }
+    l->Ponderacion = nuevaPond;
+
+    puts("Pregunta modificada con éxito.");
+}
+
+void borrarPregunta(Pregunta **l, int id, Respuesta *r) {
+    Pregunta *act = *l, *ant = NULL;
+
+    while (act != NULL && act->Pregunta_Id != id) {
+        ant = act;
+        act = act->sgte;
+    }
+
+    if (act == NULL) {
+        puts("Pregunta no encontrada.");
+        return;
+    }
+
+    // Verificación: no borrar si tiene respuestas asociadas
+    while (r != NULL) {
+        if (r->Pregunta_Id == id) {
+            puts("No se puede borrar: la pregunta tiene respuestas asociadas.");
+            return;
+        }
+        r = r->sgte;
+    }
+
+    if (ant == NULL) {
+        *l = act->sgte;
+    } else {
+        ant->sgte = act->sgte;
+    }
+
+    free(act);
+    puts("Pregunta borrada correctamente.");
+}
 //===================================|RESPUESTAS|===================================
 void crudRespuestas(Respuesta **l){
 	int opc, id;//opc para ocpion del crud e id para buscar el de modificar y para buscar el id a borrar]
