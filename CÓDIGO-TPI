@@ -63,8 +63,8 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL);
 void crearPregunta(Pregunta **l);
 Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
 void mostrarPregunta(Pregunta *l);
-void modificarPregunta(Pregunta *l, int id);
-void borrarPregunta(Pregunta **l, int id, Respuesta *r);
+void modificarPregunta(Pregunta *l, long long id);
+void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res);
 
 //====|ARBOL|====
 void Agregar_Registro_Encuesta_Respondida();
@@ -248,8 +248,8 @@ void mostrar_arbol(registry *r) {
 //===================================|PREGUNTAS|===================================
 void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 	int eleccion=-1;
-	int id=0;
-		
+	long long id;
+	
 	printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Modificar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: "); 
 	fflush(stdin);
     scanf("%d", &eleccion);
@@ -270,16 +270,15 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 		    case 3:
 		        puts("Has elegido el modulo: Modificar pregunta");   
 		        printf("Ingrese ID a modificar: ");
-                scanf("%d", &id);
+                scanf("%lld", &id);
                 modificarPregunta(*l, id);
 			break;
 			
 		    case 4:
 		        puts("Has elegido el modulo: Borrar pregunta ");
 		        printf("Ingrese ID a borrar: ");
-                int id;
-                scanf("%d", &id);
-                borrarPregunta(l, id, *respL);
+                scanf("%lld", &id);
+                borrarPregunta(l, id, respL);
 		    break;
 		    
 		    case 0:
@@ -374,7 +373,7 @@ void mostrarPregunta(Pregunta *l){
     }
 }
 
-void modificarPregunta(Pregunta *l, int id) {
+void modificarPregunta(Pregunta *l, long long id) {
     while (l != NULL && l->Pregunta_Id != id) {
         l = l->sgte;
     }
@@ -400,37 +399,42 @@ void modificarPregunta(Pregunta *l, int id) {
     puts("Pregunta modificada con éxito.");
 }
 
-void borrarPregunta(Pregunta **l, int id, Respuesta *r) {
-    Pregunta *act = *l, *ant = NULL;
+void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
+    Pregunta *act = *l, *ant = NULL, *bor;
 
-    while (act != NULL && act->Pregunta_Id != id) {
-        ant = act;
-        act = act->sgte;
-    }
+    while (act != NULL) {
+        if (act->Encuesta_Id == encuestaId) {
+            // Borrar todas las respuestas de esta pregunta
+            Respuesta *r = *res;
+            while (r != NULL) {
+                if (r->Pregunta_Id == act->Pregunta_Id) {
+                    borrarRespuesta(res, r->Respuesta_Id, *res);
+                    r = *res; // Reiniciar por si se eliminó el primer nodo
+                } else {
+                    r = r->sgte;
+                }
+            }
 
-    if (act == NULL) {
-        puts("Pregunta no encontrada.");
-        return;
-    }
-
-    // Verificación: no borrar si tiene respuestas asociadas
-    while (r != NULL) {
-        if (r->Pregunta_Id == id) {
-            puts("No se puede borrar: la pregunta tiene respuestas asociadas.");
-            return;
+            // Borrar la pregunta
+            bor = act;
+            if (ant == NULL) {
+                *l = act->sgte;
+                act = *l;
+            } else {
+                ant->sgte = act->sgte;
+                act = ant->sgte;
+            }
+            free(bor);
+            puts("Pregunta borrada.");
+        } else {
+            ant = act;
+            act = act->sgte;
         }
-        r = r->sgte;
     }
 
-    if (ant == NULL) {
-        *l = act->sgte;
-    } else {
-        ant->sgte = act->sgte;
-    }
-
-    free(act);
-    puts("Pregunta borrada correctamente.");
+    puts("Todas las preguntas de la encuesta fueron borradas.");
 }
+
 //===================================|RESPUESTAS|===================================
 void crudRespuestas(Respuesta **l){
 	int opc, id;//opc para ocpion del crud e id para buscar el de modificar y para buscar el id a borrar]
