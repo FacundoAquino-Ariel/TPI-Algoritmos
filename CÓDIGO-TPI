@@ -26,17 +26,18 @@ typedef struct Encuesta {
 
 typedef struct Marcado {
     long long Pregunta_Id,Respuesta_Id;
-    struct Marcado* sgte; // Puntero al siguiente marcado
+    struct Marcado *sgte; // Puntero al siguiente marcado
 }Marcado;
+Marcado rew,rew2;
 
 typedef struct EncuestaResp {
     long long idEncuestaRespondida, Encuesta_Id,encuestador;
     char fecha[30];
     Marcado* listaPreguntas; // Lista enlazada de respuestas marcadas
-    struct EncuestaResp* izq, *der;
+    struct EncuestaResp *izq, *der;
 }registry;
-registry reg;
 registry reg2;
+
 //----------------|PUNTEROS FILE|-------------------------
 FILE *encuestas_respondidas_CSV,*marcado;
 
@@ -62,12 +63,15 @@ void Crud_Preguntas();
 
 //====|ARBOL|====
 void Agregar_Registro_Encuesta_Respondida();
-void Leer_CSV_Encuestas_Respondidas();
+void Leer_CSV_Encuestas_Respondidas(registry **);
+registry* insertar_arbol(registry *, registry * );
+void mostrar_arbol(registry *r);
 
 //----------------|MAIN|----------------------------
 int main() {
 	
 	Respuesta *respL = NULL;
+	registry *raiz = NULL;
 	int eleccion=-1;
 	
 	while (eleccion != 0) {
@@ -85,17 +89,18 @@ int main() {
             case 3:
                 printf("Has elegido el modulo: CRUD de Respuestas\n");
                 crudRespuestas(&respL);
-                break;
+        	break;
             case 4:
                 printf("Has elegido el modulo: Procesamiento de Encuestas (Archivos)\n");
-                break;
+        	break;
             case 5:
-	 	puts("Has elegido el modulo: Leer = 1/ Registar = 2 CSV");
-		scanf("%d", &eleccion);
-		if (eleccion == 1 || eleccion == 2) {
-		        (eleccion == 1) ? Leer_CSV_Encuestas_Respondidas() : Agregar_Registro_Encuesta_Respondida();
-		}else
-			puts("Opcion invalida. Intente de nuevo.");
+		//TEGAN EL ARCHIVO CON LOS DATOS DENTRO DE LA CARPETA
+	 	//Agregar_Registro_Encuesta_Respondida();
+		puts("========================lectura desde el registro========================");
+		Leer_CSV_Encuestas_Respondidas(&raiz);
+		
+		puts("\n========================lectura desde el arbol========================");
+		mostrar_arbol(raiz);
                 break;
             case 6:
                 printf("Ya estás en el menu principal.\n");
@@ -130,10 +135,7 @@ void Agregar_Registro_Encuesta_Respondida(){
 	
 	    printf("Ingrese ID Respuesta (12 digitos): ");
 	    fflush(stdin);
-		scanf("%lld", &reg2.listaPreguntas->Respuesta_Id);
-		
-		//===================================
-		
+		scanf("%lld", &reg2.listaPreguntas->Respuesta_Id);		
 	    
 		printf("Ingrese Fecha (YYYYMMDD): ");
 		fflush(stdin);
@@ -151,26 +153,90 @@ void Agregar_Registro_Encuesta_Respondida(){
 	
 	    fclose(encuestas_respondidas_CSV);
 	    puts("Registro agregado correctamente.");
-		free(reg.listaPreguntas);
+		free(reg2.listaPreguntas);
 	}else
 		puts("Error.");
 }
 
-void Leer_CSV_Encuestas_Respondidas(){
+void Leer_CSV_Encuestas_Respondidas(registry **r){
     char linea[200];
+    
     if ((encuestas_respondidas_CSV = fopen("Encuestas_RESPONDIDAS.txt", "r"))!= NULL) {
 	    printf("\n---Registros Leidos---\n");
-	    reg.listaPreguntas = (Marcado*) malloc(sizeof(Marcado));
+	    
 	    while (fgets(linea, sizeof(linea), encuestas_respondidas_CSV)) {
-	        // Asume campos separados por coma, todos son fijos
-	        sscanf(linea,"%6lld%8lld%12lld%8s%4lld%12lld", &reg.Encuesta_Id,&reg.listaPreguntas->Pregunta_Id, &reg.listaPreguntas->Respuesta_Id, &reg.fecha, &reg.encuestador, &reg.idEncuestaRespondida);
-	
-	        printf("| Encuesta: %06lld \n| Pregunta: %08lld \n| Respuesta: %012lld \n| Fecha: %s \n| Encuestador: %04lld \n| ID Resp: %012lld\n", reg.Encuesta_Id,reg.listaPreguntas->Pregunta_Id, reg.listaPreguntas->Respuesta_Id, reg.fecha, reg.encuestador, reg.idEncuestaRespondida);
+			
+			registry *nv = (registry*) malloc(sizeof(registry));
+			nv->der=NULL;
+			nv->izq=NULL;
+			
+			nv->listaPreguntas = (Marcado*) malloc(sizeof(Marcado));
+	        nv->listaPreguntas->sgte=NULL;
+	        
+			sscanf(linea,"%6lld%8lld%12lld%8s%4lld%12lld", &nv->Encuesta_Id,&nv->listaPreguntas->Pregunta_Id, &nv->listaPreguntas->Respuesta_Id, nv->fecha, &nv->encuestador, &nv->idEncuestaRespondida);
+			
+			printf("Encuesta: %06lld | Pregunta: %08lld | Respuesta: %012lld | Fecha: %s | Encuestador: %04lld | ID Resp: %012lld\n", nv->Encuesta_Id,nv->listaPreguntas->Pregunta_Id, nv->listaPreguntas->Respuesta_Id, nv->fecha, nv->encuestador, nv->idEncuestaRespondida);
+
+			*r = insertar_arbol(*r,nv);
 	    }
 	    fclose(encuestas_respondidas_CSV);
-	    free(reg.listaPreguntas);
+	    
     }else
 		puts("Error.");
+}
+
+registry* insertar_arbol(registry *r, registry *n) {
+    if (r != NULL) {
+        if (r->idEncuestaRespondida == n->idEncuestaRespondida) {
+            if (r->listaPreguntas == NULL) {
+				// Primer nodo en la lista
+				r->listaPreguntas= n->listaPreguntas;
+			} else {
+				//insertar al final
+				Marcado* actual = r->listaPreguntas;
+				while (actual->sgte != NULL) {
+				    actual = actual->sgte;
+				}
+					actual->sgte = n->listaPreguntas;
+			}
+			free(n);
+        } else
+			if (n->idEncuestaRespondida < r->idEncuestaRespondida) {
+            r->izq = insertar_arbol(r->izq, n);
+        } else {
+            r->der = insertar_arbol(r->der, n);
+        }
+    } else {
+        r = n;
+        r->izq = r->der = NULL;
+    }
+    return r;
+}
+
+void mostrar_arbol(registry *r) {
+	if (r == NULL)
+		return;
+
+    // Mostrar subárbol izquierdo
+    mostrar_arbol(r->izq);
+
+    // Mostrar datos del nodo actual
+    printf("\nEncuesta Respondida ID: %012lld\n", r->idEncuestaRespondida);
+    printf("Encuesta ID: %06lld\n", r->Encuesta_Id);
+    printf("Fecha: %s\n", r->fecha);
+    printf("Encuestador: %04lld\n", r->encuestador);
+    printf("Preguntas y Respuestas:\n");
+
+    // Recorrer la lista de preguntas
+    Marcado* actual = r->listaPreguntas;
+    while (actual != NULL) {
+        printf("Pregunta ID: %08lld | Respuesta ID: %012lld\n", 
+               actual->Pregunta_Id, actual->Respuesta_Id);
+        actual = actual->sgte;
+    }
+
+    // Mostrar subárbol derecho
+    mostrar_arbol(r->der);
 }
 
 //===================================|PREGUNTAS|===================================
