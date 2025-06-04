@@ -227,11 +227,7 @@ void mostrar_arbol(registry *r) {
     mostrar_arbol(r->izq);
 
     // Mostrar datos del nodo actual
-    printf("\nEncuesta Respondida ID: %012lld\n", r->idEncuestaRespondida);
-    printf("Encuesta ID: %06lld\n", r->Encuesta_Id);
-    printf("Fecha: %s\n", r->fecha);
-    printf("Encuestador: %04lld\n", r->encuestador);
-    printf("Preguntas y Respuestas:\n");
+    printf("\nEncuesta Respondida ID: %012lld | Encuesta ID: %06lld | Fecha: %s | Encuestador: %04lld\nPreguntas y Respuestas:\n", r->idEncuestaRespondida, r->Encuesta_Id, r->fecha, r->encuestador);
 
     // Recorrer la lista de preguntas
     Marcado* actual = r->listaPreguntas;
