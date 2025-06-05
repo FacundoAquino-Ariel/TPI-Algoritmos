@@ -51,12 +51,12 @@ void modificarRespuesta(Respuesta *l, int id);
 void borrarRespuesta(Respuesta **l, int id, Respuesta *r);
 
 void crearEncuesta(Encuesta ** head);
+void apilar(Encuesta * node, Encuesta **head);
 void borrarEncuesta(Encuesta ** head);
 void modificarEncuesta(Encuesta ** head);
-void leerEncuesta();
-void apilar(Encuesta ** head, Encuesta * node);
-void pilavacia();
-void desapilar();
+void leerCSVencuestas(Encuesta **head);
+int pilavacia(Encuesta *head);
+Encuesta desapilar(Encuesta **head);
 
 //====|PREGUNTAS|====
 void Crud_Preguntas(Pregunta **l, Respuesta **respL);
@@ -616,21 +616,103 @@ void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
 	}
 }
 
-void crearEncuesta(Encuesta ** head){
 
+void apilar(Encuesta * node, Encuesta **head){
+
+    node->sgte = *head;
+    *head = node;
+}
+
+int pilavacia(Encuesta *head){
+    if (head == NULL){
+        return 1;
+    }
+    else 
+        return 0;
+}
+Encuesta desapilar(Encuesta **head)
+{
+    Encuesta * tmp = *head;
+    if (pilavacia(*head) == 0)
+    {
+        *head = (*head)->sgte;
+        tmp->sgte = NULL;
+        Encuesta copia = *tmp;
+        free(tmp);
+        return copia;
+    }
+}
+
+void crearEncuesta(Encuesta ** head){	
+char id[20];
+char id2[20];
+char bufferCleaner; 
+FILE * EncuestaCSV = NULL;   
 time_t currentTime = time(NULL);
 struct tm *monthYear = localtime(&currentTime); 
-long long randomNumber;
-Encuesta * newNode = malloc(sizeof(Encuesta));
-rand_s(&randomNumber);
+Encuesta * newNode = (Encuesta*)malloc(sizeof(Encuesta));
+if (newNode == NULL)
+{
+    printf("Error en la memoria");
+    return;
+}
+unsigned __int32 rand;
+rand_s(&rand);
+long long randomNumber = (long long)rand;
+sprintf(id, "%lld", randomNumber);
+strncpy(id2, id, 6);
+randomNumber = strtoll(id2, NULL,0 );
 
-printf("Ingresar nombre de la encuesta");
-fgets(newNode->Denominacion, 1, stdin);
+printf("Ingresar nombre de la encuesta\n");
+while ((bufferCleaner = getchar()) != '\n' && bufferCleaner != EOF);
+fgets(newNode->Denominacion, sizeof(newNode->Denominacion), stdin);
+while ((bufferCleaner = getchar()) != '\n' && bufferCleaner != EOF);
+newNode->Denominacion[strcspn(newNode->Denominacion, "\n")] = 0;
 newNode->Encuesta_Anio = monthYear->tm_year + 1900;
 newNode->Encuesta_Mes = monthYear->tm_mon + 1;
 newNode->Procesada = 0;
 newNode->sgte = NULL;
 newNode->Encuesta_Id = randomNumber;
 apilar(newNode, head);
+printf("Nueva encuesta con el id %lld creada", newNode->Encuesta_Id);
 
+fopen_s(&EncuestaCSV, "Encuesta.CSV", "a");
+if (EncuestaCSV == NULL){
+    printf("Error al abrir el csv\n");
+    return;
 }
+fprintf(EncuestaCSV, "%lld,%s,%d,%d,%d\n", newNode->Encuesta_Id, newNode->Denominacion, newNode->Encuesta_Mes, newNode->Encuesta_Anio, newNode->Procesada);
+fclose(EncuestaCSV);
+}
+
+void leerCSVencuestas(Encuesta **head) {
+FILE * csv;
+char linea [80];
+char * token;
+char * campoCsv[5];
+fopen_s(&csv, "Encuesta.CSV", "r");
+if (csv == NULL){
+    printf("Error al abrir el csv\n");
+    return;
+}
+while (fgets(linea, sizeof(linea), csv) != NULL)
+{
+    linea[strcspn(linea, "\n")] = 0;
+    int i = 0;
+     token = strtok(linea, ",");
+      while (token != NULL && i < 5) {
+            campoCsv[i] = token; 
+            i++;
+            token = strtok(NULL, ","); 
+        }
+    Encuesta * newNode = (Encuesta*)malloc(sizeof(Encuesta));
+    newNode->Encuesta_Id = strtoll(campoCsv[0], NULL, 0);
+    strcpy(newNode->Denominacion, campoCsv[1]);
+    newNode->Encuesta_Mes = atoi(campoCsv[2]);
+    newNode->Encuesta_Anio = atoi(campoCsv[3]);
+    newNode->Procesada = atoi(campoCsv[4]);
+    apilar(newNode, head);
+}
+fclose(csv);
+}
+
