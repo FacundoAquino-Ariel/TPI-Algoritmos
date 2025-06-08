@@ -43,13 +43,16 @@ FILE *encuestas_respondidas_CSV,*marcado;
 
 //----------------|PROTOTIPOS|----------------------------
 //====|RESPUESTAS|====
-void crudRespuestas();
-void crearRespuesta(Respuesta **l);
+void crudRespuestas(Pregunta *pl, Respuesta **l);
+void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg);
 void insertarRespuesta(Respuesta **l, Respuesta *nv, Respuesta *r);
 void mostrarRespuestas(Respuesta *l);
 void modificarRespuesta(Respuesta *l, int id);
+void preBorrar(Respuesta **l, int id, Respuesta *r, Pregunta *pl);
 void borrarRespuesta(Respuesta **l, int id, Respuesta *r);
+void leerRespuestasCSV(const char* nombreArchivo, Respuesta **inicio);
 
+//====|ENCUESTAS|====
 void menuEncuestas(Encuesta **head);
 void crearEncuesta(Encuesta **head);
 void apilar(Encuesta * node, Encuesta **head);
@@ -100,7 +103,7 @@ int main() {
                 break;
             case 3:
                 printf("Has elegido el modulo: CRUD de Respuestas\n");
-                crudRespuestas(&respL);
+                crudRespuestas(&pregL, &respL);
         	break;
             case 4:
                 printf("Has elegido el modulo: Procesamiento de Encuestas (Archivos)\n");
@@ -438,32 +441,40 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
 }
 
 //===================================|RESPUESTAS|===================================
-void crudRespuestas(Respuesta **l){
+void crudRespuestas(Pregunta *pl, Respuesta **l){
 	int opc, id;//opc para ocpion del crud e id para buscar el de modificar y para buscar el id a borrar]
 	
-	printf("====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n0.Salir\n|Ingrese una opcion:|\n");
+	printf("====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n5. Leer CSV Respuestas\n0.Salir\n|Ingrese una opcion:|\n");
+	fflush(stdin);
 	scanf("%d",&opc);
-	while(opc < 0 || opc > 4){
-		printf("|Opcion invalida!|\n|Ingrese nuevamente|\n====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n0.Salir\n|Ingrese una opcion:|\n");
+	while(opc < 0 || opc > 5){
+		printf("|Opcion invalida!|\n|Ingrese nuevamente|\n====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n5. Leer CSV Respuestas\n0.Salir\n|Ingrese una opcion:|\n");
+		fflush(stdin);
 		scanf("%d",&opc);
 	}
 	switch(opc){
 		case 0: printf("Quintana\n");break;
-		case 1: crearRespuesta(&(*l)); break;
+		case 1: crearRespuesta(&(*l),pl,0,0); break;
 		case 2: printf("Ingrese el id respuesta a modificar:\n");
+				fflush(stdin);
 				scanf("%d",&id);
 				modificarRespuesta(*l,id);break;
 		case 3: printf("Ingrese el id respuesta a borrar:\n");
+				fflush(stdin);
 				scanf("%d",&id);
-				borrarRespuesta(&(*l),id,*l);break;
+				preBorrar(&(*l),id,*l,pl);break;
 		case 4: mostrarRespuestas((*l));break;
+		case 5: leerRespuestasCSV("respuestas.csv",&(*l));break;
 		default: printf("Opcion invalida, Intente nuevamente!\n");
 	}
 }
 
-void crearRespuesta(Respuesta **l){
+void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg){ //el parametro "uno" sirve para determinar si la ponderacion de la respuesta es "1" u otro valor, 1=1|0=x
 	Respuesta *aux = NULL; //sirve solo para recorrer la lista y buscar el maximo id
 	int n = 0; //es el numero de respuesta maximo en una misma pregunta
+	int primero = 1; //es un booleano que indentifica que esta va a ser la primer respuesta en agragar a una pregunta. Se asume que este es el primero
+	int preg = 0; //es otro booleano que identifica si existe la el "id pregunta" o no. 0=no|1=si
+	
 	Respuesta *p = (Respuesta *) malloc(sizeof(Respuesta));
 	if(p == NULL){
 		printf("no hay espacio en momoria\n");
@@ -482,14 +493,29 @@ void crearRespuesta(Respuesta **l){
 	}
 	
 	//cargar id pregunta
-	printf("pregunta id:\n");
-	scanf("%d",&p->Pregunta_Id);
-	
+	//si idPreg es 0, entonces el idPregunta puede ser cualquier numero
+	if(idPreg == 0){
+		fflush(stdin);
+		printf("pregunta id:\n");
+		scanf("%lld",&p->Pregunta_Id);
+		while(pl != NULL){
+			if(pl->Pregunta_Id == p->Pregunta_Id){
+				preg = 1;
+			}
+			pl = pl->sgte;
+		}
+	}else{//si idPreg es distinto de 0, entonces el idPregunta va a ser idPreg
+		p->Pregunta_Id = idPreg;
+	}
+	if(preg == 0){
+		printf("no existe el id pregunta, no se puede continuar\n");
+		return;
+	}
 	//obtener el mayor numero de respuesta y ponerle +1
 	if(*l == NULL){
 		p->Respuesta_Nro = 1;	
 	}else{
-		aux = (*l)->sgte;
+		aux = (*l);
 		while(aux->sgte != *l){
 			if(aux->Pregunta_Id == p->Pregunta_Id && aux->Respuesta_Nro > n){ // busca el nodo en la misma pregunta pero con un numero de respuesta mayor
 				n = aux->Respuesta_Nro;
@@ -499,13 +525,43 @@ void crearRespuesta(Respuesta **l){
 		p->Respuesta_Nro = aux->Respuesta_Nro + 1;
 	}
 	
-	//cargar los datos restantes, MODIFICAR CUANDO EXISTAN LOS DEMAS CRUDS por si hay limitantes
+	//cargar la ponderacion
+	if(uno == 1){
+		printf("Se determino anteriormente que la ponderacion de esta respuesta va a ser 1\n");
+		p->Ponderacion = 1;
+	}else{
+		if(*l == NULL){
+			printf("la lista esta vacia, la ponderacion va a ser 1. Ingrese la pregunta que corresponda con esta\n");	
+			p->Ponderacion = 1;
+		}else{
+			aux = (*l);
+			while(aux->sgte != *l){
+				if(aux->Pregunta_Id == p->Pregunta_Id){
+					primero = 0;
+				}
+				aux = aux->sgte;
+			}
+			if(primero == 1){
+				printf("No existe ninguna respuesta vinculada al 'id pregunta' anterior. La poneracion sera '1' por lo que el texto de la respuesta debera corresponder a esta ponderacion\n");
+				p->Ponderacion = 1;
+			}else{
+				fflush(stdin);
+				printf("Ingrese la ponderacion entre 0 y 1 (no 1)\n");
+				scanf("%f",&p->Ponderacion);
+				while(p->Ponderacion == 1){
+					printf("Ya existe un ponderacion 1, pureba otra ponderacion\n");
+					printf("Ingrese la ponderacion entre 0 y 1 (no 1)\n");
+					scanf("%f",&p->Ponderacion);
+				}
+			}
+		}
+	}
+	
+	//cargar el texto de la respuesta, MODIFICAR CUANDO EXISTAN LOS DEMAS CRUDS por si hay limitantes
+	fflush(stdin);
 	printf("ingrese la respuesta (texto):\n");
-	fflush(stdin);
 	gets(p->Respuesta);
-	fflush(stdin);
-	printf("Ingrese la ponderacion entre 0 y 1\n");
-	scanf("%f",&p->Ponderacion);
+	
 	p->sgte = NULL;
 	insertarRespuesta(&(*l),p,(*l));
 	printf("Se creo una nueva respuesta!\n");
@@ -545,29 +601,38 @@ void mostrarRespuestas(Respuesta *l){
 	Respuesta *r;
 	r = l;
 	if(l != NULL){
-		printf("RESPUESTA ID: %d | PREGUNTA ID: %d | RESPUESTA NRO: %d | RESPUESTA: %s | PONDERACION: %.2f\n",l->Respuesta_Id,l->Pregunta_Id,l->Respuesta_Nro,l->Respuesta,l->Ponderacion);
+		printf("RESPUESTA ID: %lld | PREGUNTA ID: %lld | RESPUESTA NRO: %d | RESPUESTA: %s | PONDERACION: %.2f\n",l->Respuesta_Id,l->Pregunta_Id,l->Respuesta_Nro,l->Respuesta,l->Ponderacion);
 		l = l->sgte;
-	}
-	while(l != r){
-		printf("RESPUESTA ID: %d | PREGUNTA ID: %d | RESPUESTA NRO: %d | RESPUESTA: %s | PONDERACION: %.2f\n",l->Respuesta_Id,l->Pregunta_Id,l->Respuesta_Nro,l->Respuesta,l->Ponderacion);
-		l = l->sgte;
+		while(l != r){
+			printf("RESPUESTA ID: %lld | PREGUNTA ID: %lld | RESPUESTA NRO: %d | RESPUESTA: %s | PONDERACION: %.2f\n",l->Respuesta_Id,l->Pregunta_Id,l->Respuesta_Nro,l->Respuesta,l->Ponderacion);
+			l = l->sgte;
+		}
+	}else{
+		printf("La lista esta vacia\n");
 	}
 }
 
 void modificarRespuesta(Respuesta *l, int id){
 	Respuesta *r; // "r" representa en todos los casos donde comienza y termina la lista para no tener entrar en bucle infinito
+	int encontrado = 0; //Es una bandera que indica si se encontro al nodo o no
 	if(l != NULL){
 		r = l;
 		//comparar en el primer nodo
 		if(l->Respuesta_Id == id){
+			encontrado = 1;
 			printf(" |Encontrado!|\n-Pregunta id (antes: '%d'):\n",l->Pregunta_Id);
-			scanf("%d",&l->Pregunta_Id);
+			fflush(stdin);
+			scanf("%lld",&l->Pregunta_Id);
 			printf("Respuesta (antes: '%s'):\n",l->Respuesta);
 			fflush(stdin);
 			gets(l->Respuesta);
 			fflush(stdin);
-			printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
-			scanf("%f",&l->Ponderacion);
+			if(l->Ponderacion == 1){
+				printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\n");
+			}else{
+				printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
+				scanf("%f",&l->Ponderacion);
+			}
 			printf("|Datos modificados!|\n");
 			return;
 		}
@@ -577,25 +642,66 @@ void modificarRespuesta(Respuesta *l, int id){
 		while(l != r){
 			//se encontro y se modifican los datos del nodo menos el de "Respuesta ID"
 			if(l->Respuesta_Id == id){
+				encontrado = 1;
 				printf(" |Encontrado!|\n-Pregunta id (antes: '%d'):\n",l->Pregunta_Id);
-				scanf("%d",&l->Pregunta_Id);
+				fflush(stdin);
+				scanf("%lld",&l->Pregunta_Id);
 				printf("Respuesta (antes: '%s'):\n",l->Respuesta);
 				fflush(stdin);
 				gets(l->Respuesta);
 				fflush(stdin);
-				printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
-				scanf("%f",&l->Ponderacion);
+				if(l->Ponderacion == 1){
+					printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\n");
+				}else{
+					printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
+					scanf("%f",&l->Ponderacion);
+				}
 				printf("|Datos modificados!|\n");
 			}
 			l = l->sgte;
 		}
+		if(encontrado == 0){
+			printf("No se encontro al nodo\n");
+		}
+	}else{
+		printf("La lista esta vacia\n");
+	}
+}
+
+void preBorrar(Respuesta **l, int id, Respuesta *r, Pregunta *pl){
+	Respuesta *aux = NULL;
+	if(*l != NULL){
+		aux = *l;
+		if(aux->Respuesta_Id == id){
+			//borrar y cargar nuevo si es pond 1
+			if(aux->Ponderacion == 1){
+				printf("El nodo a borrar tiene ponderacion 1, se creara otra respuesta a la misma pregunta con ponderacion 1\n");
+				crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
+			}
+			borrarRespuesta(&(*l),id,*l);
+		}else{
+			aux = aux->sgte;
+			while(aux != *l){
+				if(aux->Respuesta_Id == id){
+					//borrar y cargar nuevo si es pond 1
+					if(aux->Ponderacion == 1){
+						printf("El nodo a borrar tiene ponderacion 1, se creara otra respuesta a la misma pregunta con ponderacion 1\n");
+						crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
+					}
+					borrarRespuesta(&(*l),id,*l);
+					break;
+				}
+				aux = aux->sgte;
+			}
+		}
+	}else{
+		printf("La lista esta vacia\n");
 	}
 }
 
 void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
 	Respuesta *bor, *ult;
 	if(*l != NULL){
-		printf("%d\n",(*l)->sgte->Respuesta_Id);
 		if((*l)->Respuesta_Id == id){
 			if(*l == r){
 				ult = *l;
@@ -608,7 +714,6 @@ void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
 			*l = (*l)->sgte;
 			if(*l == bor){
 				*l = NULL;
-				printf("nodo unico\n");
 			}
 			free(bor);
 			printf("|se borro la respuesta|\n");
@@ -622,6 +727,82 @@ void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
 	}
 }
 
+void leerRespuestasCSV(const char* nombreArchivo, Respuesta **inicio) {
+    FILE* archivo = fopen(nombreArchivo, "r");
+    if (!archivo) {
+        printf("No se pudo abrir el archivo: %s\n", nombreArchivo);
+        return;
+    }
+
+    char linea[256];
+
+    while (fgets(linea, sizeof(linea), archivo)) {
+        Respuesta *nuevo = (Respuesta*) malloc(sizeof(Respuesta));
+        if (!nuevo) {
+            printf("Error al reservar memoria\n");
+            fclose(archivo);
+            return;
+        }
+
+        // Extracción de campos numéricos fijos
+        char idStr[13] = {0}, preguntaStr[13] = {0}, nroStr[13] = {0};
+        strncpy(idStr, linea, 12);
+        strncpy(preguntaStr, linea + 12, 12);
+        strncpy(nroStr, linea + 24, 12);
+
+        nuevo->Respuesta_Id = atoll(idStr);
+        nuevo->Pregunta_Id = atoll(preguntaStr);
+        nuevo->Respuesta_Nro = atoll(nroStr);
+
+        // Buscar última coma (que es la de la ponderación)
+        char* coma = strrchr(linea, ',');
+        if (!coma) {
+            printf("Error: no se encontró coma decimal\n");
+            free(nuevo);
+            continue;
+        }
+
+        // Extraer parte flotante
+        char ponderacionStr[10];
+        strncpy(ponderacionStr, coma - 1, 6); // captura " 0,75" o " 1,00"
+        ponderacionStr[6] = '\0';
+
+        // Reemplazar coma por punto para atof
+        for (int i = 0; ponderacionStr[i]; i++) {
+            if (ponderacionStr[i] == ',') {
+                ponderacionStr[i] = '.';
+            }
+        }
+
+        nuevo->Ponderacion = atof(ponderacionStr);
+
+        // Extraer cadena de texto entre campos fijos y coma
+        int inicioTexto = 36; // 12+12+12
+        int finTexto = coma - linea; // posición de la coma
+
+        int longitudTexto = finTexto - inicioTexto;
+        if (longitudTexto >= 50) longitudTexto = 49;
+
+        strncpy(nuevo->Respuesta, linea + inicioTexto, longitudTexto);
+		nuevo->Respuesta[longitudTexto] = '\0';
+
+		// Eliminar espacios finales y dígitos sueltos tipo '0' o '1'
+		for (int i = longitudTexto - 1; i >= 0; i--) {
+ 		   if (nuevo->Respuesta[i] == ' ' || (nuevo->Respuesta[i] >= '0' && nuevo->Respuesta[i] <= '9')) {
+  		      nuevo->Respuesta[i] = '\0';
+  		  } else {
+  		      break;
+ 		   }
+		}
+        nuevo->sgte = NULL;
+
+       insertarRespuesta(&(*inicio),nuevo,*inicio);
+    }
+
+    fclose(archivo);
+}
+
+//===================================|Encuestas|===================================
 
 void apilar(Encuesta * node, Encuesta **head){
 
