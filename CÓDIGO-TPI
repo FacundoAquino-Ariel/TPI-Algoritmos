@@ -87,6 +87,7 @@ int main() {
 	Encuesta *head = NULL;
 	
 	leerCSVencuestas(&head); 
+	leerRespuestasCSV("respuestas.csv",&(*l));
 	
 	while (eleccion != 0) {
  		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Leer/Grabar CSV\n6. Menu principal\n0. Salir\nSeleccione una opcion: ");
