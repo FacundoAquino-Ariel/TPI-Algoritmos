@@ -103,7 +103,7 @@ int main() {
                 break;
             case 3:
                 printf("Has elegido el modulo: CRUD de Respuestas\n");
-                crudRespuestas(&pregL, &respL);
+                crudRespuestas(pregL, &respL);
         	break;
             case 4:
                 printf("Has elegido el modulo: Procesamiento de Encuestas (Archivos)\n");
