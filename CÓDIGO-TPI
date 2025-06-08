@@ -794,11 +794,12 @@ if (pilavacia(*head) == 1)
 void menuEncuestas(Encuesta **head){
 	int i = 10;
 	char auxiliar[5];
-	
+	FILE * listaModificada = NULL;
+
 	while (i != 0) {
 		
 		printf("----- Menu de Encuestas ------- \n 1 - Nueva encuesta  \n 2 - Lista de encuestas  \n 3 - Modificar encuesta \n 4 - Borrar encuesta \n 0 - Salir \n Ingrese una opcion: "); 
-		gets(auxiliar);
+		fgets(auxiliar, sizeof(auxiliar, stdin));
 		i = atoi(auxiliar);
 		printf("\n");
         switch (i) {
@@ -814,8 +815,6 @@ void menuEncuestas(Encuesta **head){
 		    
 		    case 3:
 			printf("------Modificando encuesta------\n");   
-			
-			FILE * listaModificada = NULL;
 			remove("Encuesta.CSV");
 			fopen_s(&listaModificada, "Encuesta.CSV", "a");
 			if (listaModificada == NULL){
@@ -829,7 +828,6 @@ void menuEncuestas(Encuesta **head){
 			
 		    case 4:
 		        printf("------Borrar encuesta------\n");
-		        FILE * listaModificada = NULL;
 				remove("Encuesta.CSV");
 				fopen_s(&listaModificada, "Encuesta.CSV", "a");
 				if (listaModificada == NULL){
