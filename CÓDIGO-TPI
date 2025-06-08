@@ -531,11 +531,11 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
 void crudRespuestas(Pregunta *pl, Respuesta **l){
 	int opc, id;//opc para ocpion del crud e id para buscar el de modificar y para buscar el id a borrar]
 	
-	printf("====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n5. Leer CSV Respuestas\n0.Salir\n|Ingrese una opcion:|\n");
+	printf("====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n0.Salir\n|Ingrese una opcion:|\n");
 	fflush(stdin);
 	scanf("%d",&opc);
 	while(opc < 0 || opc > 5){
-		printf("|Opcion invalida!|\n|Ingrese nuevamente|\n====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n5. Leer CSV Respuestas\n0.Salir\n|Ingrese una opcion:|\n");
+		printf("|Opcion invalida!|\n|Ingrese nuevamente|\n====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n0.Salir\n|Ingrese una opcion:|\n");
 		fflush(stdin);
 		scanf("%d",&opc);
 	}
@@ -551,7 +551,6 @@ void crudRespuestas(Pregunta *pl, Respuesta **l){
 				scanf("%d",&id);
 				preBorrar(&(*l),id,*l,pl);break;
 		case 4: mostrarRespuestas((*l));break;
-		case 5: leerRespuestasCSV("respuestas.csv",&(*l));break;
 		default: printf("Opcion invalida, Intente nuevamente!\n");
 	}
 }
