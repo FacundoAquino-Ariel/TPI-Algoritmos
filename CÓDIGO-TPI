@@ -42,7 +42,26 @@ registry reg2;
 FILE *encuestas_respondidas_CSV,*marcado;
 
 //----------------|PROTOTIPOS|----------------------------
-//====|RESPUESTAS|====
+//====|ENCUESTAS|QUINTANA|====
+void menuEncuestas(Encuesta **head);
+void crearEncuesta(Encuesta **head);
+void apilar(Encuesta * node, Encuesta **head);
+void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada);
+void modificarEncuesta(Encuesta **head, long long id, FILE *listaModificada);
+void ListaDeEncuestas(Encuesta **head);
+int pilavacia(Encuesta *head);
+Encuesta * desapilar(Encuesta **head);
+void leerCSVencuestas(Encuesta **head);
+
+//====|PREGUNTAS|TARNOWSKI|====
+void Crud_Preguntas(Pregunta **l, Respuesta **respL);
+void crearPregunta(Pregunta **l);
+Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
+void mostrarPregunta(Pregunta *l);
+void modificarPregunta(Pregunta *l, long long id);
+void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res);
+
+//====|RESPUESTAS|SANCHEZ|====
 void crudRespuestas(Pregunta *pl, Respuesta **l);
 void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg);
 void insertarRespuesta(Respuesta **l, Respuesta *nv, Respuesta *r);
@@ -52,31 +71,11 @@ void preBorrar(Respuesta **l, int id, Respuesta *r, Pregunta *pl);
 void borrarRespuesta(Respuesta **l, int id, Respuesta *r);
 void leerRespuestasCSV(const char* nombreArchivo, Respuesta **inicio);
 
-//====|ENCUESTAS|====
-void menuEncuestas(Encuesta **head);
-void crearEncuesta(Encuesta **head);
-void apilar(Encuesta * node, Encuesta **head);
-void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada);
-void modificarEncuesta(Encuesta **head, long long id, FILE *listaModificada);
-void leerCSVencuestas(Encuesta **head);
-void ListaDeEncuestas(Encuesta **head);
-int pilavacia(Encuesta *head);
-Encuesta * desapilar(Encuesta **head);
-
-//====|PREGUNTAS|====
-void Crud_Preguntas(Pregunta **l, Respuesta **respL);
-void cargarPreguntasDesdeCSV(Pregunta **head);
-void crearPregunta(Pregunta **l);
-Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
-void mostrarPregunta(Pregunta *l);
-void modificarPregunta(Pregunta *l, long long id);
-void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res);
-
-//====|ARBOL|====
+//====|ARBOL|AQUINO|====
 void Agregar_Registro_Encuesta_Respondida();
-void Leer_CSV_Encuestas_Respondidas(registry **);
 registry* insertar_arbol(registry *, registry * );
-void mostrar_arbol(registry *r);
+void mostrar_arbol(registry *);
+void Leer_CSV_Encuestas_Respondidas(registry **);
 
 //----------------|MAIN|----------------------------
 int main() {
@@ -92,8 +91,9 @@ int main() {
  	cargarPreguntasDesdeCSV(&pregL);
 	
 	while (eleccion != 0) {
- 		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Leer/Grabar CSV\n6. Menu principal\n0. Salir\nSeleccione una opcion: ");
-        scanf("%d", &eleccion);
+ 		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Mostrar datos del archivo.csv de encuestas respondidas\n0. Salir\nSeleccione una opcion: ");
+        fflush(stdin);
+		scanf("%d", &eleccion);
 
         switch (eleccion) {
             case 1:
@@ -109,19 +109,21 @@ int main() {
                 crudRespuestas(pregL, &respL);
         	break;
             case 4:
-                printf("Has elegido el modulo: Procesamiento de Encuestas (Archivos)\n");
+                printf("Has elegido el modulo: Mostrar datos del archivo.csv de encuestas respondidas\n");
         	break;
             case 5:
-		//TEGAN EL ARCHIVO CON LOS DATOS DENTRO DE LA CARPETA
-	 	//Agregar_Registro_Encuesta_Respondida();
-		puts("========================lectura desde el registro========================");
-		Leer_CSV_Encuestas_Respondidas(&raiz);
-		
-		puts("\n========================lectura desde el arbol========================");
-		mostrar_arbol(raiz);
-                break;
-            case 6:
-                printf("Ya estás en el menu principal.\n");
+				//TEGAN EL ARCHIVO CON LOS DATOS DENTRO DE LA CARPETA
+				printf("agregar un nuevo registro? 1=si 2=no: ");
+				fflush(stdin);
+				scanf("%d",&eleccion);
+				if(eleccion==1)
+					Agregar_Registro_Encuesta_Respondida();
+				
+				puts("========================Asi se ven los datos dentro del CSV========================");
+				Leer_CSV_Encuestas_Respondidas(&raiz);
+				
+				puts("\n========================Asi se ven los datos dentro del ARBOL========================");
+				mostrar_arbol(raiz);
                 break;
             case 0:
                 printf("Saliendo del programa...\n");
