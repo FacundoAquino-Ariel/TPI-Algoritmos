@@ -65,6 +65,7 @@ Encuesta * desapilar(Encuesta **head);
 
 //====|PREGUNTAS|====
 void Crud_Preguntas(Pregunta **l, Respuesta **respL);
+void cargarPreguntasDesdeCSV(Pregunta **head);
 void crearPregunta(Pregunta **l);
 Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
 void mostrarPregunta(Pregunta *l);
@@ -88,6 +89,7 @@ int main() {
 	
 	leerCSVencuestas(&head); 
 	leerRespuestasCSV("respuestas.csv",&respL);
+ 	cargarPreguntasDesdeCSV(&pregL);
 	
 	while (eleccion != 0) {
  		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Leer/Grabar CSV\n6. Menu principal\n0. Salir\nSeleccione una opcion: ");
@@ -256,6 +258,15 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 	int eleccion=-1;
 	long long id;
 	
+
+    // Mostrar preguntas para verificar
+    Pregunta *aux = *l;
+    while (aux != NULL) {
+        printf("ID: %d - Texto: %s - ID Encuesta: %d\n",
+            aux->Pregunta_Id, aux->Pregunta, aux->Encuesta_Id);
+        aux = aux->sgte;
+    }
+	
 	printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Modificar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: "); 
 	fflush(stdin);
     scanf("%d", &eleccion);
@@ -301,51 +312,109 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
     }
 }
 
+void cargarPreguntasDesdeCSV(Pregunta **head) {
+    FILE *archivo = fopen("Preguntas.csv", "r");
+    if (archivo == NULL) {
+        printf("Error al abrir Preguntas.csv\n");
+        return;
+    }
+
+    char linea[200];
+    char *token;
+    char *campos[3];
+
+    while (fgets(linea, sizeof(linea), archivo)) {
+        linea[strcspn(linea, "\n")] = 0;  // Quitar salto de línea
+
+        int i = 0;
+        token = strtok(linea, ",");
+        while (token != NULL && i < 3) {
+            campos[i++] = token;
+            token = strtok(NULL, ",");
+        }
+
+        Pregunta *nueva = malloc(sizeof(Pregunta));
+        if (nueva == NULL) {
+            printf("Error de memoria\n");
+            fclose(archivo);
+            return;
+        }
+
+        nueva->Pregunta_Id = atoi(campos[0]);
+        strncpy(nueva->Pregunta, campos[1], sizeof(nueva->Pregunta));
+        nueva->Pregunta[sizeof(nueva->Pregunta)-1] = '\0';  // seguridad
+        nueva->Encuesta_Id = atoi(campos[2]);
+        nueva->sgte = NULL;
+
+        // Insertar al final de la lista
+        if (*head == NULL) {
+            *head = nueva;
+        } else {
+            Pregunta *actual = *head;
+            while (actual->sgte != NULL) {
+                actual = actual->sgte;
+            }
+            actual->sgte = nueva;
+        }
+    }
+
+    fclose(archivo);
+    printf("Preguntas cargadas desde CSV correctamente.\n");
+}
+
 void crearPregunta(Pregunta **l){
-	Pregunta *p;
-	Pregunta *aux;
-	long long nuevoid = 1;
-	
-	p = (Pregunta *) malloc(sizeof(Pregunta));
-	if (p == NULL) {
+    Pregunta *p;
+    Pregunta *aux;
+    long long nuevoid = 1;
+
+    p = (Pregunta *) malloc(sizeof(Pregunta));
+    if (p == NULL) {
         printf("No hay espacio de memoria.\n");
         return;  
     }
-    
-    if (*l != NULL) {  
+
+    // Obtener nuevo ID
+    if (*l != NULL) {
         aux = *l;     
-        nuevoid = aux->Pregunta_Id; 
-
-
+        nuevoid = aux->Pregunta_Id;
         while (aux != NULL) {
-            if (aux->Pregunta_Id > nuevoid) {
+            if (aux->Pregunta_Id > nuevoid)
                 nuevoid = aux->Pregunta_Id;
-            }
             aux = aux->sgte;
         }
-        p->Pregunta_Id = nuevoid + 1;  
+        p->Pregunta_Id = nuevoid + 1;
     } else {
-        p->Pregunta_Id = 1;  
+        p->Pregunta_Id = 1;
     }
- 	// Pedir datos
+
+    // Pedir datos
     printf("Ingrese ID de la encuesta asociada: ");
     scanf("%lld", &p->Encuesta_Id);
-    printf("Ingrese el texto de la pregunta: ");
+    
     fflush(stdin);
+    printf("Ingrese el texto de la pregunta: ");
     fgets(p->Pregunta, 50, stdin);
     p->Pregunta[strcspn(p->Pregunta, "\n")] = '\0';
 
-    // Validar ponderación
+    // Calcular suma de ponderaciones existentes para esta encuesta
     float sumaPonderacion = 0.0;
     Pregunta *temp = *l;
     while (temp != NULL) {
-        sumaPonderacion += temp->Ponderacion;
+        if (temp->Encuesta_Id == p->Encuesta_Id)
+            sumaPonderacion += temp->Ponderacion;
         temp = temp->sgte;
+    }
+
+    if (sumaPonderacion >= 1.0) {
+        printf("No se puede agregar más preguntas a esta encuesta. Ponderación total alcanzada.\n");
+        free(p);
+        return;
     }
 
     printf("Ingrese la ponderación (0.01 a %.2f): ", 1.0 - sumaPonderacion);
     scanf("%f", &p->Ponderacion);
-    if (sumaPonderacion + p->Ponderacion > 1.0) {
+
+    if (p->Ponderacion <= 0.0 || sumaPonderacion + p->Ponderacion > 1.0) {
         printf("Error: La suma de ponderaciones no puede exceder 1.0.\n");
         free(p);
         return;
@@ -380,28 +449,45 @@ void mostrarPregunta(Pregunta *l){
 }
 
 void modificarPregunta(Pregunta *l, long long id) {
-    while (l != NULL && l->Pregunta_Id != id) {
-        l = l->sgte;
-    }
-    if (l == NULL) {
+    Pregunta *actual = l;
+    
+    while (actual != NULL && actual->Pregunta_Id != id)
+        actual = actual->sgte;
+
+    if (actual == NULL) {
         puts("Pregunta no encontrada.");
         return;
     }
 
-    printf("Ingrese nuevo texto para la pregunta: ");
     fflush(stdin);
-    fgets(l->Pregunta, 50, stdin);
-    l->Pregunta[strcspn(l->Pregunta, "\n")] = '\0';
+    printf("Ingrese nuevo texto para la pregunta: ");
+    fgets(actual->Pregunta, 50, stdin);
+    actual->Pregunta[strcspn(actual->Pregunta, "\n")] = '\0';
 
     printf("Ingrese nueva ponderación: ");
     float nuevaPond;
     scanf("%f", &nuevaPond);
-    if (nuevaPond < 0.0 || nuevaPond > 1.0) {
-        puts("Ponderación inválida. Debe estar entre 0 y 1.");
+
+    if (nuevaPond <= 0.0 || nuevaPond > 1.0) {
+        puts("Ponderación inválida. Debe estar entre 0.01 y 1.0");
         return;
     }
-    l->Ponderacion = nuevaPond;
 
+    // Calcular suma de ponderaciones actuales (excepto la pregunta actual)
+    float suma = 0.0;
+    Pregunta *aux = l;
+    while (aux != NULL) {
+        if (aux != actual && aux->Encuesta_Id == actual->Encuesta_Id)
+            suma += aux->Ponderacion;
+        aux = aux->sgte;
+    }
+
+    if (suma + nuevaPond > 1.0) {
+        puts("Error: La suma total de ponderaciones excede 1.0");
+        return;
+    }
+
+    actual->Ponderacion = nuevaPond;
     puts("Pregunta modificada con éxito.");
 }
 
