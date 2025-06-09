@@ -647,13 +647,22 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg){ //el para
 		p->Respuesta_Nro = 1;	
 	}else{
 		aux = (*l);
-		while(aux->sgte != *l){
+		printf("n1 = %d\n",n);
+		if(aux->Pregunta_Id == p->Pregunta_Id && aux->Respuesta_Nro > n){ // busca el nodo en la misma pregunta pero con un numero de respuesta mayor
+			printf("aca hay uno %lld | p: %lld\n",aux->Respuesta_Id,aux->Pregunta_Id);
+			n = aux->Respuesta_Nro;
+		}
+		aux = aux->sgte;
+		printf("n2 = %d\n",n);
+		while(aux != *l){
 			if(aux->Pregunta_Id == p->Pregunta_Id && aux->Respuesta_Nro > n){ // busca el nodo en la misma pregunta pero con un numero de respuesta mayor
+				printf("aca hay uno %lld | p: %lld\n",aux->Respuesta_Id,aux->Pregunta_Id);
 				n = aux->Respuesta_Nro;
 			}
 			aux = aux->sgte;
+			printf("n = %d\n",n);
 		}
-		p->Respuesta_Nro = aux->Respuesta_Nro + 1;
+		p->Respuesta_Nro = n + 1;
 	}
 	
 	//cargar la ponderacion
@@ -666,7 +675,11 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg){ //el para
 			p->Ponderacion = 1;
 		}else{
 			aux = (*l);
-			while(aux->sgte != *l){
+			if(aux->Pregunta_Id == p->Pregunta_Id){
+				primero = 0;
+			}
+				aux = aux->sgte;
+			while(aux != *l){
 				if(aux->Pregunta_Id == p->Pregunta_Id){
 					primero = 0;
 				}
@@ -679,16 +692,23 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg){ //el para
 				fflush(stdin);
 				printf("Ingrese la ponderacion entre 0 y 1 (no 1)\n");
 				scanf("%f",&p->Ponderacion);
-				while(p->Ponderacion == 1){
-					printf("Ya existe un ponderacion 1, pureba otra ponderacion\n");
-					printf("Ingrese la ponderacion entre 0 y 1 (no 1)\n");
-					scanf("%f",&p->Ponderacion);
+				while(p->Ponderacion < 0 || p->Ponderacion >= 1){
+					if(p->Ponderacion == 1){
+						printf("Ya existe un ponderacion 1, pureba otra ponderacion\n");
+						printf("Ingrese la ponderacion entre 0 y 1 (no 1)\n");
+						fflush(stdin);
+						scanf("%f",&p->Ponderacion);
+					}else{
+						printf("No se puede tener una ponderacion menor a 0 o mayor o igual a 1. Ingreselo nuevamente\n");
+						fflush(stdin);
+						scanf("%f",&p->Ponderacion);
+					}
 				}
 			}
 		}
 	}
 	
-	//cargar el texto de la respuesta, MODIFICAR CUANDO EXISTAN LOS DEMAS CRUDS por si hay limitantes
+	//cargar el texto de la respuesta
 	fflush(stdin);
 	printf("ingrese la respuesta (texto):\n");
 	gets(p->Respuesta);
