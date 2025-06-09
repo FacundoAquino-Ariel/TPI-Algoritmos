@@ -782,6 +782,7 @@ void modificarRespuesta(Respuesta *l, int id){
 				printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\n");
 			}else{
 				printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
+				fflush(stdin);
 				scanf("%f",&l->Ponderacion);
 			}
 			printf("|Datos modificados!|\n");
@@ -805,6 +806,7 @@ void modificarRespuesta(Respuesta *l, int id){
 					printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\n");
 				}else{
 					printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
+					fflush(stdin);
 					scanf("%f",&l->Ponderacion);
 				}
 				printf("|Datos modificados!|\n");
