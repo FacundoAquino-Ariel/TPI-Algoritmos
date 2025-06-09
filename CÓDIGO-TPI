@@ -43,10 +43,10 @@ FILE *encuestas_respondidas_CSV,*marcado;
 
 //----------------|PROTOTIPOS|----------------------------
 //====|ENCUESTAS|QUINTANA|====
-void menuEncuestas(Encuesta **head);
+void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe);
 void crearEncuesta(Encuesta **head);
 void apilar(Encuesta * node, Encuesta **head);
-void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada);
+void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregunta **headPr, Respuesta **headRe);
 void modificarEncuesta(Encuesta **head, long long id, FILE *listaModificada);
 void ListaDeEncuestas(Encuesta **head);
 int pilavacia(Encuesta *head);
@@ -99,7 +99,7 @@ int main() {
         switch (eleccion) {
             case 1:
                 printf("Has elegido el modulo: CRUD de Encuestas\n");
-				menuEncuestas(&head);
+				menuEncuestas(&head, &pregL, &respL);
                 break;
             case 2:
                 printf("Has elegido el modulo: CRUD de Preguntas\n");
@@ -1097,7 +1097,8 @@ if (pilavacia(*head) == 1)
 	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
 }
-void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada){
+void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe)
+{
 if (pilavacia(*head) == 1)
 	{
 		return;
@@ -1123,7 +1124,8 @@ if (pilavacia(*head) == 1)
 	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
 }
-void menuEncuestas(Encuesta **head){
+void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregunta **headPr, Respuesta **headRe)
+{
 	int i = 10;
 	char auxiliar[50];
 	FILE * listaModificada = NULL;
