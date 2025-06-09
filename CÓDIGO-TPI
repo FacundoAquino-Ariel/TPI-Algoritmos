@@ -288,14 +288,14 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 		    
 		    case 3:
 		        puts("Has elegido el modulo: Modificar pregunta");   
-		        printf("Ingrese ID a modificar: ");
+		        printf("Ingrese ID de pregunta a modificar: ");
                 scanf("%lld", &id);
                 modificarPregunta(*l, id);
 			break;
 			
 		    case 4:
 		        puts("Has elegido el modulo: Borrar pregunta ");
-		        printf("Ingrese ID a borrar: ");
+		        printf("Ingrese ID de encuesta de preguntas a borrar: ");
                 scanf("%lld", &id);
                 borrarPregunta(l, id, respL);
 		    break;
@@ -315,25 +315,18 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 }
 
 void cargarPreguntasDesdeCSV(Pregunta **head) {
-    FILE *archivo = fopen("Preguntas.csv", "r");
+    FILE *archivo = fopen("preguntas.csv", "r");
     if (archivo == NULL) {
-        printf("Error al abrir Preguntas.csv\n");
+        printf("Error al abrir preguntas.csv\n");
         return;
     }
 
-    char linea[200];
-    char *token;
-    char *campos[3];
+    char linea[256];
+    int contador = 0;
 
-    while (fgets(linea, sizeof(linea), archivo)) {
-        linea[strcspn(linea, "\n")] = 0;  // Quitar salto de línea
-
-        int i = 0;
-        token = strtok(linea, ",");
-        while (token != NULL && i < 3) {
-            campos[i++] = token;
-            token = strtok(NULL, ",");
-        }
+    while (fgets(linea, sizeof(linea), archivo) != NULL) {
+        contador++;
+        linea[strcspn(linea, "\r\n")] = '\0';  // Eliminar retorno de carro y salto de línea
 
         Pregunta *nueva = malloc(sizeof(Pregunta));
         if (nueva == NULL) {
@@ -342,13 +335,50 @@ void cargarPreguntasDesdeCSV(Pregunta **head) {
             return;
         }
 
-        nueva->Pregunta_Id = atoi(campos[0]);
-        strncpy(nueva->Pregunta, campos[1], sizeof(nueva->Pregunta));
-        nueva->Pregunta[sizeof(nueva->Pregunta)-1] = '\0';  // seguridad
-        nueva->Encuesta_Id = atoi(campos[2]);
-        nueva->sgte = NULL;
+        // Extraer IDs
+        char idPreguntaStr[9] = {0};
+        char idEncuestaStr[7] = {0};
+        strncpy(idPreguntaStr, linea, 8);
+        strncpy(idEncuestaStr, linea + 8, 6);
+        nueva->Pregunta_Id = atoll(idPreguntaStr);
+        nueva->Encuesta_Id = atoll(idEncuestaStr);
 
-        // Insertar al final de la lista
+	      for (int i = strlen(linea) - 1; i >= 0; i--) {
+		    if ((linea[i] >= '0' && linea[i] <= '9') || linea[i] == ',' || linea[i] == '.') {
+		        int j = i;
+		        while (j >= 0 && ((linea[j] >= '0' && linea[j] <= '9') || linea[j] == ',' || linea[j] == '.')) {
+		            j--;
+		        }
+		
+		        char ponderacionStr[16] = {0};
+		        strncpy(ponderacionStr, linea + j + 1, i - j);
+		
+		        // Reemplazar coma por punto
+		        for (int k = 0; ponderacionStr[k] != '\0'; k++) {
+		            if (ponderacionStr[k] == ',') {
+		                ponderacionStr[k] = '.';
+		            }
+		        }
+		
+		        nueva->Ponderacion = atof(ponderacionStr);
+
+		        break;
+		    }
+		}
+
+        // Extraer texto
+        int len = strlen(linea); 
+        int textoLen = len - 8 - 6 - 4;
+        if (textoLen > 0) {
+            strncpy(nueva->Pregunta, linea + 14, textoLen);
+            nueva->Pregunta[textoLen] = '\0';
+        } else {
+            strcpy(nueva->Pregunta, "");
+            printf("No se pudo extraer texto\n");
+        }
+
+        // Insertar en lista
+        nueva->sgte = NULL;
         if (*head == NULL) {
             *head = nueva;
         } else {
@@ -358,10 +388,11 @@ void cargarPreguntasDesdeCSV(Pregunta **head) {
             }
             actual->sgte = nueva;
         }
+
     }
 
     fclose(archivo);
-    printf("Preguntas cargadas desde CSV correctamente.\n");
+    printf("Preguntas cargadas desde preguntas.csv correctamente.\n");
 }
 
 void crearPregunta(Pregunta **l){
@@ -374,7 +405,7 @@ void crearPregunta(Pregunta **l){
         printf("No hay espacio de memoria.\n");
         return;  
     }
-
+    
     // Obtener nuevo ID
     if (*l != NULL) {
         aux = *l;     
@@ -445,7 +476,7 @@ void mostrarPregunta(Pregunta *l){
     }
     puts("Lista de preguntas:");
     while (l != NULL) {
-        printf("\nID: %lld\nEncuesta ID: %lld\nTexto: %s\nPonderación: %.2f\n", l->Pregunta_Id, l->Encuesta_Id, l->Pregunta, l->Ponderacion);
+        printf("\nID: %lld\nEncuesta ID: %lld\nTexto: %s\nPonderacion: %.2f\n", l->Pregunta_Id, l->Encuesta_Id, l->Pregunta, l->Ponderacion);
         l = l->sgte;
     }
 }
