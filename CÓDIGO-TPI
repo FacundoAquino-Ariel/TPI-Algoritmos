@@ -80,7 +80,7 @@ void Leer_CSV_Encuestas_Respondidas(registry **);
 //----------------|MAIN|----------------------------
 int main() {
 	int eleccion=-1;
-
+	char auxiliar[50];
 	Pregunta *pregL = NULL;
 	Respuesta *respL = NULL;
 	registry *raiz = NULL;
@@ -92,8 +92,8 @@ int main() {
 	
 	while (eleccion != 0) {
  		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Mostrar datos del archivo.csv de encuestas respondidas\n0. Salir\nSeleccione una opcion: ");
-        fflush(stdin);
-		scanf("%d", &eleccion);
+        fgets(auxiliar, sizeof(auxiliar), stdin);
+		eleccion = atoi(auxiliar);
 
         switch (eleccion) {
             case 1:
@@ -938,7 +938,6 @@ randomNumber = strtoll(id2, NULL,0 );
 
 printf("Ingresar nombre de la encuesta\n");
 fgets(newNode->Denominacion, sizeof(newNode->Denominacion), stdin);
-while ((bufferCleaner = getchar()) != '\n' && bufferCleaner != EOF);
 newNode->Denominacion[strcspn(newNode->Denominacion, "\n")] = 0;
 newNode->Encuesta_Anio = monthYear->tm_year + 1900;
 newNode->Encuesta_Mes = monthYear->tm_mon + 1;
@@ -946,7 +945,7 @@ newNode->Procesada = 0;
 newNode->sgte = NULL;
 newNode->Encuesta_Id = randomNumber;
 apilar(newNode, head);
-printf("Nueva encuesta con el id %lld creada", newNode->Encuesta_Id);
+printf("Nueva encuesta con el id %lld creada \n", newNode->Encuesta_Id);
 
 fopen_s(&EncuestaCSV, "Encuesta.CSV", "a");
 if (EncuestaCSV == NULL){
@@ -1009,9 +1008,9 @@ if (pilavacia(*head) == 1)
 	if (id == 0)
 	{
 		char bufferCleaner; 
-		char aux[7];
+		char aux[60];
+		printf("ingrese id de la encuesta \n");
 		fgets(aux, sizeof(aux), stdin);
-		while ((bufferCleaner = getchar()) != '\n' && bufferCleaner != EOF);
 		aux[strcspn(aux, "\n")] = 0;
 		id = strtoll(aux, NULL, 0);
 	}
@@ -1026,7 +1025,6 @@ if (pilavacia(*head) == 1)
 		struct tm *monthYear = localtime(&currentTime);
 		printf("Ingresar nombre de la encuesta\n");
 		fgets(nodeTmp->Denominacion, sizeof(nodeTmp->Denominacion), stdin);
-		while ((bufferCleaner = getchar()) != '\n' && bufferCleaner != EOF);
 		nodeTmp->Denominacion[strcspn(nodeTmp->Denominacion, "\n")] = 0;
 		nodeTmp->Encuesta_Anio = monthYear->tm_year + 1900;
 		nodeTmp->Encuesta_Mes = monthYear->tm_mon + 1;
@@ -1042,9 +1040,9 @@ if (pilavacia(*head) == 1)
 	if (id == 0)
 	{
 		char bufferCleaner; 
-		char aux[7];
+		char aux[60];
+		printf("ingrese id de la encuesta \n");
 		fgets(aux, sizeof(aux), stdin);
-		while ((bufferCleaner = getchar()) != '\n' && bufferCleaner != EOF);
 		aux[strcspn(aux, "\n")] = 0;
 		id = strtoll(aux, NULL, 0);
 	}
@@ -1062,13 +1060,13 @@ if (pilavacia(*head) == 1)
 }
 void menuEncuestas(Encuesta **head){
 	int i = 10;
-	char auxiliar[5];
+	char auxiliar[50];
 	FILE * listaModificada = NULL;
 
 	while (i != 0) {
 		
 		printf("----- Menu de Encuestas ------- \n 1 - Nueva encuesta  \n 2 - Lista de encuestas  \n 3 - Modificar encuesta \n 4 - Borrar encuesta \n 0 - Salir \n Ingrese una opcion: "); 
-		fgets(auxiliar, sizeof(auxiliar, stdin));
+		fgets(auxiliar, sizeof(auxiliar), stdin);
 		i = atoi(auxiliar);
 		printf("\n");
         switch (i) {
