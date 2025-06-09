@@ -563,25 +563,27 @@ void borrarRespuestasPorPreguntaId(Respuesta **l, long long preguntaId) {
         Respuesta *siguiente = actual->sgte;
 
         if (actual->Pregunta_Id == preguntaId) {
-            if (actual == actual->sgte) { // Solo un nodo en la lista
+            if (actual == actual->sgte) { // Un único nodo en la lista
                 free(actual);
                 *l = NULL;
                 return;
             } else {
-                if (actual == *l) { // Si es el primer nodo (puntero de la lista)
-                    // Buscar el último para ajustar su sgte
+                if (actual == *l) { // Primer nodo
                     Respuesta *ultimo = *l;
                     while (ultimo->sgte != *l) {
                         ultimo = ultimo->sgte;
                     }
                     ultimo->sgte = actual->sgte;
-                    *l = actual->sgte; // Nuevo comienzo
+                    *l = actual->sgte;
                     free(actual);
                     actual = *l;
+                    // NO actualizar anterior aquí
+                    continue; // para reevaluar el nuevo *l
                 } else {
                     anterior->sgte = actual->sgte;
                     free(actual);
                     actual = anterior->sgte;
+                    continue; // para reevaluar el nuevo actual->Pregunta_Id
                 }
             }
         } else {
@@ -592,6 +594,7 @@ void borrarRespuestasPorPreguntaId(Respuesta **l, long long preguntaId) {
         primeraVuelta = 0;
     } while (actual != *l || primeraVuelta);
 }
+
 
 //===================================|RESPUESTAS|===================================
 void crudRespuestas(Pregunta *pl, Respuesta **l){
@@ -1160,33 +1163,40 @@ if (pilavacia(*head) == 1)
 	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
 }
-void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregunta **headPr, Respuesta **headRe)
-{
-if (pilavacia(*head) == 1)
-	{
-		return;
-	}
-	if (id == 0)
-	{
-		char bufferCleaner; 
-		char aux[60];
-		printf("ingrese id de la encuesta \n");
-		fgets(aux, sizeof(aux), stdin);
-		aux[strcspn(aux, "\n")] = 0;
-		id = strtoll(aux, NULL, 0);
-	}
-	Encuesta * nodeTmp = NULL;
-	nodeTmp = desapilar(head);
-	borrarEncuesta(head, id, listaModificada, headPr, headRe);
-	
-	if (id == nodeTmp->Encuesta_Id)
-	{
-		free(nodeTmp);
-		return;
-	}
-	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
-	apilar(nodeTmp, head);
+
+void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregunta **headPr, Respuesta **headRe) {
+    if (pilavacia(*head) == 1) {
+        return;
+    }
+    if (id == 0) {
+        char bufferCleaner; 
+        char aux[60];
+        printf("Ingrese ID de la encuesta: \n");
+        fgets(aux, sizeof(aux), stdin);
+        aux[strcspn(aux, "\n")] = 0;
+        id = strtoll(aux, NULL, 0);
+    }
+
+    Encuesta *nodeTmp = NULL;
+    nodeTmp = desapilar(head); // Saco un nodo de la pila
+
+    borrarEncuesta(head, id, listaModificada, headPr, headRe); // Llamada recursiva al resto de la pila
+
+    if (id == nodeTmp->Encuesta_Id) { // Es la encuesta a borrar
+        // ?? BORRAR TODAS SUS PREGUNTAS Y RESPUESTAS ASOCIADAS ANTES DE LIBERAR LA ENCUESTA:
+        borrarPregunta(headPr, id, headRe); // <-- Este llamado FALTABA
+
+        free(nodeTmp); // Libero la encuesta
+        return;
+    }
+
+    // Si no era la encuesta a borrar, la vuelvo a apilar:
+    fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion,
+            nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
+    apilar(nodeTmp, head);
 }
+
+	
 void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe)
 {
 	int i = 10;
