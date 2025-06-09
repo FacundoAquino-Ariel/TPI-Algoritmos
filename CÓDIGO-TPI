@@ -1115,7 +1115,7 @@ if (pilavacia(*head) == 1)
 	}
 	Encuesta * nodeTmp = NULL;
 	nodeTmp = desapilar(head);
-	borrarEncuesta(head, id, listaModificada);
+	borrarEncuesta(head, id, listaModificada, headPr, headRe);
 	
 	if (id == nodeTmp->Encuesta_Id)
 	{
@@ -1125,7 +1125,7 @@ if (pilavacia(*head) == 1)
 	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
 }
-void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe);
+void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe)
 {
 	int i = 10;
 	char auxiliar[50];
@@ -1169,7 +1169,7 @@ void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe);
 				printf("Error al abrir el csv\n");
 				return;
 				}
-				borrarEncuesta(head, 0, listaModificada);
+				borrarEncuesta(head, 0, listaModificada, headPr, headRe);
 				fclose(listaModificada);
 		    break;
 		    
