@@ -895,7 +895,7 @@ void preBorrar(Respuesta **l, long long id, Respuesta *r, Pregunta *pl){
 	}
 }
 
-void borrarRespuesta(Respuesta **l, int id, Respuesta *r){
+void borrarRespuesta(Respuesta **l, long long id, Respuesta *r){
 	Respuesta *bor, *ult;
 	if(*l != NULL){
 		if((*l)->Respuesta_Id == id){
