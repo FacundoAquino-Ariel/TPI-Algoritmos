@@ -1098,7 +1098,7 @@ if (pilavacia(*head) == 1)
 	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
 }
-void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe)
+void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregunta **headPr, Respuesta **headRe)
 {
 if (pilavacia(*head) == 1)
 	{
@@ -1125,7 +1125,7 @@ if (pilavacia(*head) == 1)
 	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
 }
-void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregunta **headPr, Respuesta **headRe)
+void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe);
 {
 	int i = 10;
 	char auxiliar[50];
