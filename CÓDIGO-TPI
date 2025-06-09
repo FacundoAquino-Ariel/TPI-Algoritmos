@@ -526,18 +526,32 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
 
     while (act != NULL) {
         if (act->Encuesta_Id == encuestaId) {
-            // Borrar todas las respuestas de esta pregunta
-            Respuesta *r = *res;
-            while (r != NULL) {
-                if (r->Pregunta_Id == act->Pregunta_Id) {
-                    borrarRespuesta(res, r->Respuesta_Id, *res);
-                    r = *res; // Reiniciar por si se eliminó el primer nodo
-                } else {
-                    r = r->sgte;
-                }
+
+
+            // Borrar todas las respuestas asociadas a esta pregunta (lista circular)
+            if (*res != NULL) {
+                Respuesta *r = *res;
+                Respuesta *inicio = r;
+                int primeraVuelta = 1;
+
+                do {
+                    Respuesta *siguiente = r->sgte;
+
+                    if (r->Pregunta_Id == act->Pregunta_Id) {
+
+                        borrarRespuesta(res, r->Respuesta_Id, inicio);
+                        if (*res == NULL) {
+                            break; // Se vació la lista, salir
+                        }
+                        inicio = *res; // Actualizar inicio por si cambió
+                    }
+
+                    r = siguiente;
+                    primeraVuelta = 0;
+                } while (r != inicio || primeraVuelta);
             }
 
-            // Borrar la pregunta
+            // Borrar la pregunta actual
             bor = act;
             if (ant == NULL) {
                 *l = act->sgte;
@@ -546,6 +560,7 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
                 ant->sgte = act->sgte;
                 act = ant->sgte;
             }
+
             free(bor);
             puts("Pregunta borrada.");
         } else {
