@@ -264,11 +264,7 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 
     // Mostrar preguntas para verificar
     Pregunta *aux = *l;
-    while (aux != NULL) {
-        printf("ID: %d - Texto: %s - ID Encuesta: %d\n",
-            aux->Pregunta_Id, aux->Pregunta, aux->Encuesta_Id);
-        aux = aux->sgte;
-    }
+
 	
 	printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Modificar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: "); 
 	fflush(stdin);
