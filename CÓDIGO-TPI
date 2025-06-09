@@ -64,12 +64,12 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res);
 
 //====|RESPUESTAS|SANCHEZ|====
 void crudRespuestas(Pregunta *pl, Respuesta **l);
-void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg);
+void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg);
 void insertarRespuesta(Respuesta **l, Respuesta *nv, Respuesta *r);
 void mostrarRespuestas(Respuesta *l);
-void modificarRespuesta(Respuesta *l, int id);
-void preBorrar(Respuesta **l, int id, Respuesta *r, Pregunta *pl);
-void borrarRespuesta(Respuesta **l, int id, Respuesta *r);
+void modificarRespuesta(Respuesta *l, long long id);
+void preBorrar(Respuesta **l, long long id, Respuesta *r, Pregunta *pl);
+void borrarRespuesta(Respuesta **l, long long id, Respuesta *r);
 void leerRespuestasCSV(const char* nombreArchivo, Respuesta **inicio);
 
 //====|ARBOL|AQUINO|====
@@ -638,6 +638,7 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg){ //el para
 		}
 	}else{//si idPreg es distinto de 0, entonces el idPregunta va a ser idPreg
 		p->Pregunta_Id = idPreg;
+		preg = 1;
 	}
 	if(preg == 0){
 		printf("no existe el id pregunta, no se puede continuar\n");
@@ -764,7 +765,7 @@ void mostrarRespuestas(Respuesta *l){
 	}
 }
 
-void modificarRespuesta(Respuesta *l, int id){
+void modificarRespuesta(Respuesta *l, long long id){
 	Respuesta *r; // "r" representa en todos los casos donde comienza y termina la lista para no tener entrar en bucle infinito
 	int encontrado = 0; //Es una bandera que indica si se encontro al nodo o no
 	if(l != NULL){
@@ -772,19 +773,19 @@ void modificarRespuesta(Respuesta *l, int id){
 		//comparar en el primer nodo
 		if(l->Respuesta_Id == id){
 			encontrado = 1;
-			printf(" |Encontrado!|\n-Pregunta id (antes: '%d'):\n",l->Pregunta_Id);
-			fflush(stdin);
-			scanf("%lld",&l->Pregunta_Id);
 			printf("Respuesta (antes: '%s'):\n",l->Respuesta);
 			fflush(stdin);
 			gets(l->Respuesta);
 			fflush(stdin);
 			if(l->Ponderacion == 1){
-				printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\n");
+				printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\nComo la ponderacion es 1, no se permite que esta respuesta sea trasladada a otra pregunta.\n");
 			}else{
 				printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
 				fflush(stdin);
 				scanf("%f",&l->Ponderacion);
+				printf("Pregunta id (antes: '%d'):\n",l->Pregunta_Id);
+				fflush(stdin);
+				scanf("%lld",&l->Pregunta_Id);
 			}
 			printf("|Datos modificados!|\n");
 			return;
@@ -796,21 +797,21 @@ void modificarRespuesta(Respuesta *l, int id){
 			//se encontro y se modifican los datos del nodo menos el de "Respuesta ID"
 			if(l->Respuesta_Id == id){
 				encontrado = 1;
-				printf(" |Encontrado!|\n-Pregunta id (antes: '%d'):\n",l->Pregunta_Id);
+			printf("Respuesta (antes: '%s'):\n",l->Respuesta);
+			fflush(stdin);
+			gets(l->Respuesta);
+			fflush(stdin);
+			if(l->Ponderacion == 1){
+				printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\nComo la ponderacion es 1, no se permite que esta respuesta sea trasladada a otra pregunta.\n");
+			}else{
+				printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
+				fflush(stdin);
+				scanf("%f",&l->Ponderacion);
+				printf("Pregunta id (antes: '%d'):\n",l->Pregunta_Id);
 				fflush(stdin);
 				scanf("%lld",&l->Pregunta_Id);
-				printf("Respuesta (antes: '%s'):\n",l->Respuesta);
-				fflush(stdin);
-				gets(l->Respuesta);
-				fflush(stdin);
-				if(l->Ponderacion == 1){
-					printf("La ponderacion es 1, este dato no puede ser modificado. De querer hacerlo debera borrarlo y crear otro nodo o modificar el texto de la respuesta\n");
-				}else{
-					printf("Ponderacion del 0 al 1 (antes: '%.2f'):\n",l->Ponderacion);
-					fflush(stdin);
-					scanf("%f",&l->Ponderacion);
-				}
-				printf("|Datos modificados!|\n");
+			}
+			printf("|Datos modificados!|\n");
 			}
 			l = l->sgte;
 		}
@@ -821,29 +822,71 @@ void modificarRespuesta(Respuesta *l, int id){
 		printf("La lista esta vacia\n");
 	}
 }
-
-void preBorrar(Respuesta **l, int id, Respuesta *r, Pregunta *pl){
+void preBorrar(Respuesta **l, long long id, Respuesta *r, Pregunta *pl){
 	Respuesta *aux = NULL;
+	Respuesta *temp = *l;
+	int cont = 0, opc;
 	if(*l != NULL){
 		aux = *l;
 		if(aux->Respuesta_Id == id){
 			//borrar y cargar nuevo si es pond 1
 			if(aux->Ponderacion == 1){
-				printf("El nodo a borrar tiene ponderacion 1, se creara otra respuesta a la misma pregunta con ponderacion 1\n");
-				crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
+				do {
+    			    if (temp->Pregunta_Id == aux->Pregunta_Id) {
+          			  cont++;
+       				}
+        			temp = temp->sgte;
+    			}while (temp != *l);
+    			if(cont > 1){
+    				printf("Se esta eliminando la unica respuesta con ponderación 1 para esta pregunta.\n");
+      				printf("Se creará automáticamente otra con ponderación 1.\n");
+       				crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
+       				borrarRespuesta(&(*l),id,*l);
+				}else{
+					printf("Se Esta eliminando la unica respuesta de la pregunta %lld con ponderación 1.\n", aux->Pregunta_Id);
+					printf("¿Desea eliminarla igual? (1 = si| otro = no):\n");
+					scanf("%d",&opc);
+					if(opc == 1){
+						borrarRespuesta(&(*l),id,*l);
+						printf("Respuesta eliminada.\n");
+					}else{
+						printf("Se canceló la eliminación.\n");
+					}
+				}
+			}else{
+				borrarRespuesta(&(*l),id,*l);
 			}
-			borrarRespuesta(&(*l),id,*l);
 		}else{
 			aux = aux->sgte;
 			while(aux != *l){
 				if(aux->Respuesta_Id == id){
 					//borrar y cargar nuevo si es pond 1
 					if(aux->Ponderacion == 1){
-						printf("El nodo a borrar tiene ponderacion 1, se creara otra respuesta a la misma pregunta con ponderacion 1\n");
-						crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
+						do {
+    					    if (temp->Pregunta_Id == aux->Pregunta_Id) {
+         		 			  cont++;
+       						}
+        					temp = temp->sgte;
+    					}while (temp != *l);
+    					if(cont > 1){
+    						printf("Se esta eliminando la unica respuesta con ponderación 1 para esta pregunta.\n");
+      						printf("Se creará automáticamente otra con ponderación 1.\n");
+       						crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
+       						borrarRespuesta(&(*l),id,*l);
+						}else{
+							printf("Se Esta eliminando la unica respuesta de la pregunta %lld con ponderación 1.\n", aux->Pregunta_Id);
+							printf("¿Desea eliminarla igual? (1 = si| otro = no):\n");
+							scanf("%d",&opc);
+							if(opc == 1){
+								borrarRespuesta(&(*l),id,*l);
+								printf("Respuesta eliminada.\n");
+							}else{
+								printf("Se canceló la eliminación.\n");
+							}
+						}
+					}else{
+						borrarRespuesta(&(*l),id,*l);
 					}
-					borrarRespuesta(&(*l),id,*l);
-					break;
 				}
 				aux = aux->sgte;
 			}
