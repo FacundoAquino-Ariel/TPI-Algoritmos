@@ -61,6 +61,7 @@ Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
 void mostrarPregunta(Pregunta *l);
 void modificarPregunta(Pregunta *l, long long id);
 void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res);
+void borrarRespuestasPorPreguntaId(Respuesta **l, long long preguntaId);
 
 //====|RESPUESTAS|SANCHEZ|====
 void crudRespuestas(Pregunta *pl, Respuesta **l);
@@ -389,8 +390,7 @@ void cargarPreguntasDesdeCSV(Pregunta **head) {
 
     }
 
-    fclose(archivo);
-    printf("Preguntas cargadas desde preguntas.csv correctamente.\n");
+    fclose(archivo);	
 }
 
 void crearPregunta(Pregunta **l){
@@ -528,29 +528,9 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
     while (act != NULL) {
         if (act->Encuesta_Id == encuestaId) {
 
+		// Borrar todas las respuestas asociadas a esta pregunta
+		borrarRespuestasPorPreguntaId(res, act->Pregunta_Id);
 
-            // Borrar todas las respuestas asociadas a esta pregunta (lista circular)
-            if (*res != NULL) {
-                Respuesta *r = *res;
-                Respuesta *inicio = r;
-                int primeraVuelta = 1;
-
-                do {
-                    Respuesta *siguiente = r->sgte;
-
-                    if (r->Pregunta_Id == act->Pregunta_Id) {
-
-                        borrarRespuesta(res, r->Respuesta_Id, inicio);
-                        if (*res == NULL) {
-                            break; // Se vació la lista, salir
-                        }
-                        inicio = *res; // Actualizar inicio por si cambió
-                    }
-
-                    r = siguiente;
-                    primeraVuelta = 0;
-                } while (r != inicio || primeraVuelta);
-            }
 
             // Borrar la pregunta actual
             bor = act;
@@ -563,7 +543,6 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
             }
 
             free(bor);
-            puts("Pregunta borrada.");
         } else {
             ant = act;
             act = act->sgte;
@@ -571,6 +550,47 @@ void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res) {
     }
 
     puts("Todas las preguntas de la encuesta fueron borradas.");
+}
+
+void borrarRespuestasPorPreguntaId(Respuesta **l, long long preguntaId) {
+    if (*l == NULL) return; // Lista vacía
+
+    Respuesta *actual = *l;
+    Respuesta *anterior = NULL;
+    int primeraVuelta = 1;
+
+    do {
+        Respuesta *siguiente = actual->sgte;
+
+        if (actual->Pregunta_Id == preguntaId) {
+            if (actual == actual->sgte) { // Solo un nodo en la lista
+                free(actual);
+                *l = NULL;
+                return;
+            } else {
+                if (actual == *l) { // Si es el primer nodo (puntero de la lista)
+                    // Buscar el último para ajustar su sgte
+                    Respuesta *ultimo = *l;
+                    while (ultimo->sgte != *l) {
+                        ultimo = ultimo->sgte;
+                    }
+                    ultimo->sgte = actual->sgte;
+                    *l = actual->sgte; // Nuevo comienzo
+                    free(actual);
+                    actual = *l;
+                } else {
+                    anterior->sgte = actual->sgte;
+                    free(actual);
+                    actual = anterior->sgte;
+                }
+            }
+        } else {
+            anterior = actual;
+            actual = siguiente;
+        }
+
+        primeraVuelta = 0;
+    } while (actual != *l || primeraVuelta);
 }
 
 //===================================|RESPUESTAS|===================================
