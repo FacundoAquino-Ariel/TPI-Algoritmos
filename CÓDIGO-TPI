@@ -93,7 +93,8 @@ int main() {
 	
 	while (eleccion != 0) {
  		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Mostrar datos del archivo.csv de encuestas respondidas\n0. Salir\nSeleccione una opcion: ");
-        fgets(auxiliar, sizeof(auxiliar), stdin);
+	fflush(stdin);
+       fgets(auxiliar, sizeof(auxiliar), stdin);
 		eleccion = atoi(auxiliar);
 
         switch (eleccion) {
