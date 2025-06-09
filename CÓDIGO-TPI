@@ -55,6 +55,7 @@ void leerCSVencuestas(Encuesta **head);
 
 //====|PREGUNTAS|TARNOWSKI|====
 void Crud_Preguntas(Pregunta **l, Respuesta **respL);
+void cargarPreguntasDesdeCSV(Pregunta **head);
 void crearPregunta(Pregunta **l);
 Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
 void mostrarPregunta(Pregunta *l);
