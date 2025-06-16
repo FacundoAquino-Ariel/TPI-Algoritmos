@@ -54,7 +54,7 @@ Encuesta * desapilar(Encuesta **head);
 void leerCSVencuestas(Encuesta **head);
 
 //====|PREGUNTAS|TARNOWSKI|====
-void Crud_Preguntas(Pregunta **l, Respuesta **respL);
+void Crud_Preguntas(Encuesta **tp, Pregunta **l, Respuesta **respL);
 void cargarPreguntasDesdeCSV(Pregunta **head);
 void crearPregunta(Pregunta **l);
 Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
@@ -105,7 +105,7 @@ int main() {
                 break;
             case 2:
                 printf("Has elegido el modulo: CRUD de Preguntas\n");
-                Crud_Preguntas(&pregL, &respL);
+                Crud_Preguntas(&head, &pregL, &respL);
                 break;
             case 3:
                 printf("Has elegido el modulo: CRUD de Respuestas\n");
@@ -259,7 +259,7 @@ void mostrar_arbol(registry *r) {
 }
 
 //===================================|PREGUNTAS|===================================
-void Crud_Preguntas(Pregunta **l, Respuesta **respL){
+void Crud_Preguntas(Encuesta **tp, Pregunta **l, Respuesta **respL){
 	int eleccion=-1;
 	long long id;
 	
@@ -276,6 +276,8 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 
         switch (eleccion) {
 			case 1:
+			ListaDeEncuestas(tp); 
+			puts("----Se han listado las encuestas para poder crear preguntas correctamente----"); 
 		        puts("Has elegido el modulo: Crear pregunta");
 		        crearPregunta(l);
 		    break;
@@ -293,6 +295,8 @@ void Crud_Preguntas(Pregunta **l, Respuesta **respL){
 			break;
 			
 		    case 4:
+		    	ListaDeEncuestas(tp); 
+		    	puts("----Se han listado las encuestas para poder borrar preguntas correctamente----"); 
 		        puts("Has elegido el modulo: Borrar pregunta ");
 		        printf("Ingrese ID de encuesta de preguntas a borrar: ");
                 scanf("%lld", &id);
