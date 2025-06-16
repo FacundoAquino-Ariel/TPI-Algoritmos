@@ -624,7 +624,7 @@ void crudRespuestas(Pregunta *pl, Respuesta **l){
 		default: printf("Opcion invalida, Intente nuevamente!\n");
 	}
 }
-void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //el parametro "uno" sirve para determinar si la ponderacion de la respuesta es "1" u otro valor, 1=1|0=x
+void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg){ //el parametro "uno" sirve para determinar si la ponderacion de la respuesta es "1" u otro valor, 1=1|0=x
 	Respuesta *aux = NULL; //sirve solo para recorrer la lista y buscar el maximo id
 	int n = 0; //es el numero de respuesta maximo en una misma pregunta
 	int primero = 1; //es un booleano que indentifica que esta va a ser la primer respuesta en agragar a una pregunta. Se asume que este es el primero
@@ -650,6 +650,9 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 	//cargar id pregunta
 	//si idPreg es 0, entonces el idPregunta puede ser cualquier numero
 	if(idPreg == 0){
+		printf("---MOSTRANDO LOS ID PREGUNTAS EXISTENTES---\n");
+		mostrarPregunta(pl);
+		printf("---FIN DE LOS ID PREGUNTAS EXISTENTES---\n");
 		fflush(stdin);
 		printf("pregunta id:\n");
 		scanf("%lld",&p->Pregunta_Id);
@@ -661,7 +664,6 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 		}
 	}else{//si idPreg es distinto de 0, entonces el idPregunta va a ser idPreg
 		p->Pregunta_Id = idPreg;
-		preg = 1;
 	}
 	if(preg == 0){
 		printf("no existe el id pregunta, no se puede continuar\n");
@@ -672,19 +674,13 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 		p->Respuesta_Nro = 1;	
 	}else{
 		aux = (*l);
-		if(aux->Pregunta_Id == p->Pregunta_Id && aux->Respuesta_Nro > n){ // busca el nodo en la misma pregunta pero con un numero de respuesta mayor
-			//printf("aca hay uno %lld | p: %lld\n",aux->Respuesta_Id,aux->Pregunta_Id);
-			n = aux->Respuesta_Nro;
-		}
-		aux = aux->sgte;
-		while(aux != *l){
+		while(aux->sgte != *l){
 			if(aux->Pregunta_Id == p->Pregunta_Id && aux->Respuesta_Nro > n){ // busca el nodo en la misma pregunta pero con un numero de respuesta mayor
-				//printf("aca hay uno %lld | p: %lld\n",aux->Respuesta_Id,aux->Pregunta_Id);
 				n = aux->Respuesta_Nro;
 			}
 			aux = aux->sgte;
 		}
-		p->Respuesta_Nro = n + 1;
+		p->Respuesta_Nro = aux->Respuesta_Nro + 1;
 	}
 	
 	//cargar la ponderacion
@@ -700,7 +696,7 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 			if(aux->Pregunta_Id == p->Pregunta_Id){
 				primero = 0;
 			}
-				aux = aux->sgte;
+			aux = aux->sgte;
 			while(aux != *l){
 				if(aux->Pregunta_Id == p->Pregunta_Id){
 					primero = 0;
@@ -712,25 +708,20 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 				p->Ponderacion = 1;
 			}else{
 				fflush(stdin);
-				printf("Ingrese la ponderacion entre 0 y 1 (no 1)\n");
+				printf("Ingrese la ponderacion ENTRE 0 y 1 (no mas, menos o 1)\n");
 				scanf("%f",&p->Ponderacion);
 				while(p->Ponderacion < 0 || p->Ponderacion >= 1){
 					if(p->Ponderacion == 1){
 						printf("Ya existe un ponderacion 1, pureba otra ponderacion\n");
-						printf("Ingrese la ponderacion entre 0 y 1 (no 1)\n");
-						fflush(stdin);
-						scanf("%f",&p->Ponderacion);
-					}else{
-						printf("No se puede tener una ponderacion menor a 0 o mayor o igual a 1. Ingreselo nuevamente\n");
-						fflush(stdin);
-						scanf("%f",&p->Ponderacion);
 					}
+					printf("Ingrese la ponderacion ENTRE 0 y 1 (no mas, menos o 1)\n");
+					scanf("%f",&p->Ponderacion);
 				}
 			}
 		}
 	}
 	
-	//cargar el texto de la respuesta
+	//cargar el texto de la respuesta, MODIFICAR CUANDO EXISTAN LOS DEMAS CRUDS por si hay limitantes
 	fflush(stdin);
 	printf("ingrese la respuesta (texto):\n");
 	gets(p->Respuesta);
