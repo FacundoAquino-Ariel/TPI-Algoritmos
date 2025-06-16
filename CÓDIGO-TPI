@@ -624,7 +624,7 @@ void crudRespuestas(Pregunta *pl, Respuesta **l){
 		default: printf("Opcion invalida, Intente nuevamente!\n");
 	}
 }
-void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, int idPreg){ //el parametro "uno" sirve para determinar si la ponderacion de la respuesta es "1" u otro valor, 1=1|0=x
+void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //el parametro "uno" sirve para determinar si la ponderacion de la respuesta es "1" u otro valor, 1=1|0=x
 	Respuesta *aux = NULL; //sirve solo para recorrer la lista y buscar el maximo id
 	int n = 0; //es el numero de respuesta maximo en una misma pregunta
 	int primero = 1; //es un booleano que indentifica que esta va a ser la primer respuesta en agragar a una pregunta. Se asume que este es el primero
