@@ -995,7 +995,7 @@ void leerRespuestasCSV(const char* nombreArchivo, Respuesta **inicio) {
 
         nuevo->Ponderacion = atof(ponderacionStr);
 
-        // Extraer cadena de texto entre campos fijos y coma
+        
         int inicioTexto = 36; // 12+12+12
         int finTexto = coma - linea; // posición de la coma
 
@@ -1005,7 +1005,7 @@ void leerRespuestasCSV(const char* nombreArchivo, Respuesta **inicio) {
         strncpy(nuevo->Respuesta, linea + inicioTexto, longitudTexto);
 		nuevo->Respuesta[longitudTexto] = '\0';
 
-		// Eliminar espacios finales y dígitos sueltos tipo '0' o '1'
+		
 		for (int i = longitudTexto - 1; i >= 0; i--) {
  		   if (nuevo->Respuesta[i] == ' ' || (nuevo->Respuesta[i] >= '0' && nuevo->Respuesta[i] <= '9')) {
   		      nuevo->Respuesta[i] = '\0';
@@ -1165,12 +1165,11 @@ if (pilavacia(*head) == 1)
 }
 
 void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregunta **headPr, Respuesta **headRe) {
+	char aux[60];
     if (pilavacia(*head) == 1) {
         return;
     }
     if (id == 0) {
-        char bufferCleaner; 
-        char aux[60];
         printf("Ingrese ID de la encuesta: \n");
         fgets(aux, sizeof(aux), stdin);
         aux[strcspn(aux, "\n")] = 0;
@@ -1178,21 +1177,16 @@ void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregun
     }
 
     Encuesta *nodeTmp = NULL;
-    nodeTmp = desapilar(head); // Saco un nodo de la pila
+    nodeTmp = desapilar(head); 
 
-    borrarEncuesta(head, id, listaModificada, headPr, headRe); // Llamada recursiva al resto de la pila
+    borrarEncuesta(head, id, listaModificada, headPr, headRe); 
 
-    if (id == nodeTmp->Encuesta_Id) { // Es la encuesta a borrar
-        // ?? BORRAR TODAS SUS PREGUNTAS Y RESPUESTAS ASOCIADAS ANTES DE LIBERAR LA ENCUESTA:
-        borrarPregunta(headPr, id, headRe); // <-- Este llamado FALTABA
-
-        free(nodeTmp); // Libero la encuesta
+    if (id == nodeTmp->Encuesta_Id) {
+        borrarPregunta(headPr, id, headRe); 
+        free(nodeTmp); 
         return;
     }
-
-    // Si no era la encuesta a borrar, la vuelvo a apilar:
-    fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion,
-            nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
+    fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
     apilar(nodeTmp, head);
 }
 
