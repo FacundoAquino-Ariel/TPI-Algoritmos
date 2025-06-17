@@ -89,11 +89,11 @@ void mostrar_completa(registry *a, Encuesta *p, Pregunta *l, Respuesta *c);
 
 //----------------|MAIN|----------------------------
 int main() {
-	int eleccion=-1;
+	int eleccion=-1, id;
 	char auxiliar[50];
 	Pregunta *pregL = NULL;
 	Respuesta *respL = NULL;
-	registry *raiz = NULL;
+	registry *raiz = NULL,*encuesta_resp=NULL;
 	Encuesta *head = NULL;
 	
 	leerCSVencuestas(&head); 
@@ -141,7 +141,7 @@ int main() {
             			fflush(stdin);
 						scanf("%lld",&id);
 						
-						encuesta_resp = buscarEncuestaRespondida(raiz, id);
+				encuesta_resp = buscarEncuestaRespondida(raiz, id);
             			ponderacion(encuesta_resp, head, pregL, respL,id);
             		break;
             		
