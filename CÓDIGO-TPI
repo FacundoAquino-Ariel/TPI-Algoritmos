@@ -81,29 +81,36 @@ void Leer_CSV_Encuestas_Respondidas(registry **);
 
 //====|CONSIGNAS|TODOS|====
 //====|PONDERACION X|====
-void ponderacion(registry *a, Encuesta *p, Pregunta *l, Respuesta *c, long long id);
-registry *buscarEncuestaRespondida(registry *a, long long id);
+void ponderacion(registry *r, Encuesta *p, Pregunta *l, Respuesta *c, long long id);
+
+//====|MOSTRAR ENCUESTAS RESP EN EL ARBOL|====
+void mostrar_arbol(registry *);
 
 //====|MOSTRAR ENCUESTAS RESP. COMPLETAS|====
 void mostrar_completa(registry *a, Encuesta *p, Pregunta *l, Respuesta *c);
 
+//====|MOSTRAR RESPONDIDAS DE UNA ENCUESTA|====
+void listarRespondidasPorEncuestaId(registry *raiz, long long idEncuestaOriginal);
+
 //----------------|MAIN|----------------------------
 int main() {
-	int eleccion=-1, id;
+	int eleccion=-1;
+	long long id;
 	char auxiliar[50];
 	Pregunta *pregL = NULL;
 	Respuesta *respL = NULL;
-	registry *raiz = NULL,*encuesta_resp=NULL;
+	registry *raiz = NULL;
 	Encuesta *head = NULL;
 	
 	leerCSVencuestas(&head); 
 	leerRespuestasCSV("respuestas.csv",&respL);
  	cargarPreguntasDesdeCSV(&pregL);
+	Leer_CSV_Encuestas_Respondidas(&raiz);
 	
 	while (eleccion != 0) {
- 		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Mostrar datos del archivo.csv de encuestas respondidas\n0. Salir\nSeleccione una opcion: ");
-	fflush(stdin);
-       fgets(auxiliar, sizeof(auxiliar), stdin);
+ 		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Mostrar datos del archivo.csv de encuestas respondidas\n6. Consignas\n0. Salir\nSeleccione una opcion: ");
+		fflush(stdin);
+    	fgets(auxiliar, sizeof(auxiliar), stdin);
 		eleccion = atoi(auxiliar);
 
         switch (eleccion) {
@@ -132,20 +139,19 @@ int main() {
 								
             break;
             case 6:
-            	puts("[CONSGINAS]\n1. Calcular ponderacion de una encuesta X\n2. Mostrar todas las encuestas respondidas en ABB\n3. Mostrar encuestas respondidas una a una\n4. Encuestas respondidas de un modelo encuesta particular");
+            	puts("[CONSGINAS]\n1. Calcular ponderacion de una encuesta original/modelo X \n2. Mostrar todas las encuestas respondidas en ABB\n3. Mostrar encuestas respondidas una a una\n4. Encuestas respondidas de un modelo encuesta particular");
             	fflush(stdin);
 				scanf("%d",&eleccion);
 				switch(eleccion){
             		case 1:
-            			printf("ingrese id de encuesta respondida para calcular su ponderacion: ");
+            			puts("ingrese id de encuesta orignal/modelo para calcular la ponderacion total de cada encuesta respondida que le pertenezca: ");
             			fflush(stdin);
 						scanf("%lld",&id);
 						
-				encuesta_resp = buscarEncuestaRespondida(raiz, id);
-            			ponderacion(encuesta_resp, head, pregL, respL,id);
+            			ponderacion(raiz, head, pregL, respL,id);
             		break;
             		
-            		case 2:
+					case 2:
 						mostrar_arbol(raiz);
             		break;
             		
@@ -155,6 +161,11 @@ int main() {
             		break;
             		
             		case 4:
+	            		puts("Ingrese ID de encuesta original/modelo para ver sus encuestas respondidas:");
+					    fflush(stdin);
+					    scanf("%lld", &id);
+					    printf("Listado de encuestas respondidas para el modelo %lld:\n", id);
+					    listarRespondidasPorEncuestaId(raiz, id);
             		break;
 				}
             break;
@@ -169,85 +180,60 @@ int main() {
 	return 0;
 }
 //===================================|FUNCIONES|===================================
-void ponderacion(registry *a, Encuesta *p, Pregunta *l, Respuesta *c, long long id){
+void ponderacion(registry *r, Encuesta *p, Pregunta *l, Respuesta *c, long long id){
 	
-	int band;
-	float pond = 0;
-	Pregunta *auxl = NULL;
-	Respuesta *auxc = NULL;
-	Marcado *auxa = NULL;
-	Encuesta *auxp = p;
-	int existeEncuesta = 0;
-	
-	if (a == NULL) {
-		puts("Encuesta respondida no encontrada.\n");
-		return;
-	}
+	if (r == NULL)
+	        return;
+    // Llamada recursiva al subárbol izquierdo
+    ponderacion(r->izq, p, l, c, id);
 
-	// Verificar existencia de encuesta original
-	while (auxp != NULL && !existeEncuesta) {
-		if (auxp->Encuesta_Id == a->Encuesta_Id)
-			existeEncuesta = 1;
-		else
-			auxp = auxp->sgte;
-	}
+    // Si la encuesta respondida pertenece a la encuesta original indicada
+    if (r->Encuesta_Id == id){
+        int band;
+        float pond = 0;
+        Pregunta *auxl = NULL;
+        Respuesta *auxc = NULL;
+        Marcado *auxa = r->listaPreguntas;
 
-	if (!existeEncuesta) {
-		printf("Error: No se encontró la encuesta original con ID %lld para la respondida con ID %lld.\n", a->Encuesta_Id, id);
-		return;
-	}
+        printf("Encuesta Respondida ID %lld encontrada\n", r->idEncuestaRespondida);
+        puts("-------------------------------------------");
 
-	// Proceder con cálculo si la encuesta existe
-	puts("Encuesta Respondida ENCONTRADA\n-------------------------------------------");
+        while (auxa != NULL) {
+            
+			auxl = l;
+            band = 0;
+            while (auxl != NULL && band == 0) {
+                if(auxl->Pregunta_Id == auxa->Pregunta_Id){
+                    printf("%lld pregunta: %.2f\n", auxl->Pregunta_Id, auxl->Ponderacion);
+                    band = 1;
+                } else
+                    auxl = auxl->sgte;       
+            }
 
-	auxa = a->listaPreguntas;
+            if (band == 1 && c != NULL) {
+                
+				band = 0;
+                auxc = c;
+                do {
+                    if (auxc->Respuesta_Id == auxa->Respuesta_Id) {
+                        pond += auxc->Ponderacion * auxl->Ponderacion;
+                        printf("%lld respuesta %.2f [valor] %.2f\tponderacion acumulada %.2f\n",auxc->Respuesta_Id, auxc->Ponderacion, auxc->Ponderacion * auxl->Ponderacion, pond);
+                        band = 1;
+                    } else
+                        auxc = auxc->sgte;
+                    
+                } while (auxc != c && band == 0);
+            }
 
-	while (auxa != NULL) {
-		auxl = l;
-		band = 0;
+            puts("-------------------------------------------");
+            auxa = auxa->sgte;
+        }
 
-		while (auxl != NULL && band == 0) {
-			if (auxl->Pregunta_Id == auxa->Pregunta_Id) {
-				printf("%lld encontrado preguntas %.2f\n", auxl->Pregunta_Id, auxl->Ponderacion);
-				band = 1;
-			} else {
-				auxl = auxl->sgte;
-			}
-		}
+        printf("\t\tEncuesta respondida ID %lld con ponderacion total: [%.2f]\n\n", r->idEncuestaRespondida, pond);	
+    }
 
-		if (band == 1 && c != NULL) {
-			band = 0;
-			auxc = c;
-
-			do {
-				if (auxc->Respuesta_Id == auxa->Respuesta_Id) {
-					float valor = auxc->Ponderacion * auxl->Ponderacion;
-					pond += valor;
-					printf("%lld encontrado respuestas %.2f [valor] %.2f\tponderacion acumulada %.2f\n",
-					       auxc->Respuesta_Id, auxc->Ponderacion, valor, pond);
-					band = 1;
-				} else {
-					auxc = auxc->sgte;
-				}
-			} while (auxc != c && band == 0);
-		}
-
-		puts("-------------------------------------------");
-		auxa = auxa->sgte;
-	}
-
-	printf("\t\tEncuesta respondida ID %lld con ponderacion total: [%.2f]\n", id, pond);	
-}
-
-registry *buscarEncuestaRespondida(registry *a, long long id) {
-    if (a == NULL)
-        return NULL;
-    if (a->idEncuestaRespondida == id)
-        return a;
-    else if (id < a->idEncuestaRespondida)
-        return buscarEncuestaRespondida(a->izq, id);
-    else
-        return buscarEncuestaRespondida(a->der, id);
+    // Llamada recursiva al subárbol derecho
+    ponderacion(r->der, p, l, c, id);	
 }
 
 void mostrar_completa(registry *a, Encuesta *p, Pregunta *l, Respuesta *c){
@@ -315,9 +301,26 @@ void mostrar_completa(registry *a, Encuesta *p, Pregunta *l, Respuesta *c){
 		}							
 	
 	}else
-		printf("Error: No se encontro la encuesta original con ID %lld para la respondida con ID %lld.\n",a->Encuesta_Id, a->idEncuestaRespondida);
+		printf("\nError: No se encontro la encuesta original con ID %lld para la respondida con ID %lld.\n",a->Encuesta_Id, a->idEncuestaRespondida);
 	
 	mostrar_completa(a->der, p, l, c);
+}
+
+void listarRespondidasPorEncuestaId(registry *raiz, long long idEncuestaOriginal){
+    if (raiz == NULL)
+        return;
+
+    // Recorre subárbol izquierdo
+    listarRespondidasPorEncuestaId(raiz->izq, idEncuestaOriginal);
+
+    // Si pertenece a la encuesta original, la muestra
+    if (raiz->Encuesta_Id == idEncuestaOriginal) {
+        printf("Encuesta Respondida ID: %lld (pertenece a modelo ID: %lld)\n",
+               raiz->idEncuestaRespondida, raiz->Encuesta_Id);
+    }
+
+    // Recorre subárbol derecho
+    listarRespondidasPorEncuestaId(raiz->der, idEncuestaOriginal);
 }
 
 //===================================|ARBOL|===================================
@@ -365,7 +368,6 @@ void Leer_CSV_Encuestas_Respondidas(registry **r){
     char linea[200];
     
     if ((encuestas_respondidas_CSV = fopen("Encuestas_RESPONDIDAS.txt", "r"))!= NULL) {
-	    printf("\n---Registros Leidos---\n");
 	    
 	    while (fgets(linea, sizeof(linea), encuestas_respondidas_CSV)) {
 			
