@@ -79,6 +79,14 @@ registry* insertar_arbol(registry *, registry * );
 void mostrar_arbol(registry *);
 void Leer_CSV_Encuestas_Respondidas(registry **);
 
+//====|CONSIGNAS|TODOS|====
+//====|PONDERACION X|====
+void ponderacion(registry *a, Encuesta *p, Pregunta *l, Respuesta *c, long long id);
+registry *buscarEncuestaRespondida(registry *a, long long id);
+
+//====|MOSTRAR ENCUESTAS RESP. COMPLETAS|====
+void mostrar_completa(registry *a, Encuesta *p, Pregunta *l, Respuesta *c);
+
 //----------------|MAIN|----------------------------
 int main() {
 	int eleccion=-1;
@@ -121,13 +129,35 @@ int main() {
 				scanf("%d",&eleccion);
 				if(eleccion==1)
 					Agregar_Registro_Encuesta_Respondida();
-				
-				puts("========================Asi se ven los datos dentro del CSV========================");
-				Leer_CSV_Encuestas_Respondidas(&raiz);
-				
-				puts("\n========================Asi se ven los datos dentro del ARBOL========================");
-				mostrar_arbol(raiz);
-                break;
+								
+            break;
+            case 6:
+            	puts("[CONSGINAS]\n1. Calcular ponderacion de una encuesta X\n2. Mostrar todas las encuestas respondidas en ABB\n3. Mostrar encuestas respondidas una a una\n4. Encuestas respondidas de un modelo encuesta particular");
+            	fflush(stdin);
+				scanf("%d",&eleccion);
+				switch(eleccion){
+            		case 1:
+            			printf("ingrese id de encuesta respondida para calcular su ponderacion: ");
+            			fflush(stdin);
+						scanf("%lld",&id);
+						
+						encuesta_resp = buscarEncuestaRespondida(raiz, id);
+            			ponderacion(encuesta_resp, head, pregL, respL,id);
+            		break;
+            		
+            		case 2:
+						mostrar_arbol(raiz);
+            		break;
+            		
+            		case 3:
+            			puts("Encuestas respondidas completas:");         			
+            			mostrar_completa(raiz, head, pregL, respL);
+            		break;
+            		
+            		case 4:
+            		break;
+				}
+            break;
             case 0:
                 printf("Saliendo del programa...\n");
                 break;
@@ -139,6 +169,156 @@ int main() {
 	return 0;
 }
 //===================================|FUNCIONES|===================================
+void ponderacion(registry *a, Encuesta *p, Pregunta *l, Respuesta *c, long long id){
+	
+	int band;
+	float pond = 0;
+	Pregunta *auxl = NULL;
+	Respuesta *auxc = NULL;
+	Marcado *auxa = NULL;
+	Encuesta *auxp = p;
+	int existeEncuesta = 0;
+	
+	if (a == NULL) {
+		puts("Encuesta respondida no encontrada.\n");
+		return;
+	}
+
+	// Verificar existencia de encuesta original
+	while (auxp != NULL && !existeEncuesta) {
+		if (auxp->Encuesta_Id == a->Encuesta_Id)
+			existeEncuesta = 1;
+		else
+			auxp = auxp->sgte;
+	}
+
+	if (!existeEncuesta) {
+		printf("Error: No se encontró la encuesta original con ID %lld para la respondida con ID %lld.\n", a->Encuesta_Id, id);
+		return;
+	}
+
+	// Proceder con cálculo si la encuesta existe
+	puts("Encuesta Respondida ENCONTRADA\n-------------------------------------------");
+
+	auxa = a->listaPreguntas;
+
+	while (auxa != NULL) {
+		auxl = l;
+		band = 0;
+
+		while (auxl != NULL && band == 0) {
+			if (auxl->Pregunta_Id == auxa->Pregunta_Id) {
+				printf("%lld encontrado preguntas %.2f\n", auxl->Pregunta_Id, auxl->Ponderacion);
+				band = 1;
+			} else {
+				auxl = auxl->sgte;
+			}
+		}
+
+		if (band == 1 && c != NULL) {
+			band = 0;
+			auxc = c;
+
+			do {
+				if (auxc->Respuesta_Id == auxa->Respuesta_Id) {
+					float valor = auxc->Ponderacion * auxl->Ponderacion;
+					pond += valor;
+					printf("%lld encontrado respuestas %.2f [valor] %.2f\tponderacion acumulada %.2f\n",
+					       auxc->Respuesta_Id, auxc->Ponderacion, valor, pond);
+					band = 1;
+				} else {
+					auxc = auxc->sgte;
+				}
+			} while (auxc != c && band == 0);
+		}
+
+		puts("-------------------------------------------");
+		auxa = auxa->sgte;
+	}
+
+	printf("\t\tEncuesta respondida ID %lld con ponderacion total: [%.2f]\n", id, pond);	
+}
+
+registry *buscarEncuestaRespondida(registry *a, long long id) {
+    if (a == NULL)
+        return NULL;
+    if (a->idEncuestaRespondida == id)
+        return a;
+    else if (id < a->idEncuestaRespondida)
+        return buscarEncuestaRespondida(a->izq, id);
+    else
+        return buscarEncuestaRespondida(a->der, id);
+}
+
+void mostrar_completa(registry *a, Encuesta *p, Pregunta *l, Respuesta *c){
+
+	if (a == NULL)
+		return;
+	
+	if (c == NULL) {
+	    printf("Error: lista de respuestas vacía.\n");
+	    return;
+	}
+	
+	mostrar_completa(a->izq, p, l, c);
+		
+
+	int marcada;
+	Pregunta *auxl=NULL;
+	Respuesta *auxc=NULL;
+	Marcado *auxa=NULL;	
+	Encuesta *auxp = p;	
+	int existeEncuesta = 0;
+	
+	while (auxp != NULL && !existeEncuesta){
+	    if (auxp->Encuesta_Id == a->Encuesta_Id){
+			existeEncuesta = 1;
+		}else
+	        auxp = auxp->sgte;
+	}
+	
+	if (existeEncuesta) {
+	
+		puts("==============================================================================================");
+	    printf("--- Encuesta Respondida ID: %lld ---\nEncuesta original ID: %lld | Fecha: %s\n", a->idEncuestaRespondida,a->Encuesta_Id, a->fecha);
+	    
+		auxl=l;
+		while(auxl!=NULL){// Recorrer la lista de preguntas
+			   
+			if(auxl->Encuesta_Id==a->Encuesta_Id){//preguntas que le pertenece a la encuesta respondida
+				printf("Pregunta: %s\n",auxl->Pregunta);
+				auxc = c;
+				do{//busco todas las respuestas de cada pregunta
+					
+					if(auxl->Pregunta_Id == auxc->Pregunta_Id){//respuestas que le pertenecen a cada pregunta
+			
+					    auxa = a->listaPreguntas;
+	                    marcada = 0;
+	                    while (auxa != NULL && !marcada) {
+	                        if (auxa->Respuesta_Id == auxc->Respuesta_Id)
+	                            marcada = 1;                            
+	                        
+	                        auxa = auxa->sgte;
+	                    }
+	
+	                    if (marcada)
+	                        printf("\t[X] %s\n", auxc->Respuesta);
+	                    else
+	                        printf("\t -  %s\n", auxc->Respuesta);
+					}
+					
+					auxc = auxc->sgte;				
+				}while (auxc != c);	
+			}
+			
+			auxl=auxl->sgte;
+		}							
+	
+	}else
+		printf("Error: No se encontro la encuesta original con ID %lld para la respondida con ID %lld.\n",a->Encuesta_Id, a->idEncuestaRespondida);
+	
+	mostrar_completa(a->der, p, l, c);
+}
 
 //===================================|ARBOL|===================================
 void Agregar_Registro_Encuesta_Respondida(){
@@ -198,7 +378,7 @@ void Leer_CSV_Encuestas_Respondidas(registry **r){
 	        
 			sscanf(linea,"%6lld%8lld%12lld%8s%4lld%12lld", &nv->Encuesta_Id,&nv->listaPreguntas->Pregunta_Id, &nv->listaPreguntas->Respuesta_Id, nv->fecha, &nv->encuestador, &nv->idEncuestaRespondida);
 			
-			printf("Encuesta: %06lld | Pregunta: %08lld | Respuesta: %012lld | Fecha: %s | Encuestador: %04lld | ID Resp: %012lld\n", nv->Encuesta_Id,nv->listaPreguntas->Pregunta_Id, nv->listaPreguntas->Respuesta_Id, nv->fecha, nv->encuestador, nv->idEncuestaRespondida);
+			//printf("Encuesta: %06lld | Pregunta: %08lld | Respuesta: %012lld | Fecha: %s | Encuestador: %04lld | ID Resp: %012lld\n", nv->Encuesta_Id,nv->listaPreguntas->Pregunta_Id, nv->listaPreguntas->Respuesta_Id, nv->fecha, nv->encuestador, nv->idEncuestaRespondida);
 
 			*r = insertar_arbol(*r,nv);
 	    }
@@ -1043,74 +1223,74 @@ Encuesta * desapilar(Encuesta **head)
 }
 
 void crearEncuesta(Encuesta ** head){	
-char id[20];
-char id2[20];
-char bufferCleaner; 
-FILE * EncuestaCSV = NULL;   
-time_t currentTime = time(NULL);
-struct tm *monthYear = localtime(&currentTime); 
-Encuesta * newNode = (Encuesta*)malloc(sizeof(Encuesta));
-if (newNode == NULL)
-{
-    printf("Error en la memoria");
-    return;
-}
-unsigned __int32 rand;
-rand_s(&rand);
-long long randomNumber = (long long)rand;
-sprintf(id, "%lld", randomNumber);
-strncpy(id2, id, 6);
-randomNumber = strtoll(id2, NULL,0 );
-
-printf("Ingresar nombre de la encuesta\n");
-fgets(newNode->Denominacion, sizeof(newNode->Denominacion), stdin);
-newNode->Denominacion[strcspn(newNode->Denominacion, "\n")] = 0;
-newNode->Encuesta_Anio = monthYear->tm_year + 1900;
-newNode->Encuesta_Mes = monthYear->tm_mon + 1;
-newNode->Procesada = 0;
-newNode->sgte = NULL;
-newNode->Encuesta_Id = randomNumber;
-apilar(newNode, head);
-printf("Nueva encuesta con el id %lld creada \n", newNode->Encuesta_Id);
-
-fopen_s(&EncuestaCSV, "Encuesta.CSV", "a");
-if (EncuestaCSV == NULL){
-    printf("Error al abrir el csv\n");
-    return;
-}
-fprintf(EncuestaCSV, "%lld,%s,%d,%d,%d\n", newNode->Encuesta_Id, newNode->Denominacion, newNode->Encuesta_Mes, newNode->Encuesta_Anio, newNode->Procesada);
-fclose(EncuestaCSV);
+	char id[20];
+	char id2[20];
+	char bufferCleaner; 
+	FILE * EncuestaCSV = NULL;   
+	time_t currentTime = time(NULL);
+	struct tm *monthYear = localtime(&currentTime); 
+	Encuesta * newNode = (Encuesta*)malloc(sizeof(Encuesta));
+	if (newNode == NULL)
+	{
+	    printf("Error en la memoria");
+	    return;
+	}
+	unsigned __int32 rand;
+	rand_s(&rand);
+	long long randomNumber = (long long)rand;
+	sprintf(id, "%lld", randomNumber);
+	strncpy(id2, id, 6);
+	randomNumber = strtoll(id2, NULL,0 );
+	
+	printf("Ingresar nombre de la encuesta\n");
+	fgets(newNode->Denominacion, sizeof(newNode->Denominacion), stdin);
+	newNode->Denominacion[strcspn(newNode->Denominacion, "\n")] = 0;
+	newNode->Encuesta_Anio = monthYear->tm_year + 1900;
+	newNode->Encuesta_Mes = monthYear->tm_mon + 1;
+	newNode->Procesada = 0;
+	newNode->sgte = NULL;
+	newNode->Encuesta_Id = randomNumber;
+	apilar(newNode, head);
+	printf("Nueva encuesta con el id %lld creada \n", newNode->Encuesta_Id);
+	
+	fopen_s(&EncuestaCSV, "Encuesta.CSV", "a");
+	if (EncuestaCSV == NULL){
+	    printf("Error al abrir el csv\n");
+	    return;
+	}
+	fprintf(EncuestaCSV, "%lld,%s,%d,%d,%d\n", newNode->Encuesta_Id, newNode->Denominacion, newNode->Encuesta_Mes, newNode->Encuesta_Anio, newNode->Procesada);
+	fclose(EncuestaCSV);
 }
 
 void leerCSVencuestas(Encuesta **head) {
-FILE * csv;
-char linea [80];
-char * token;
-char * campoCsv[5];
-fopen_s(&csv, "Encuesta.CSV", "r");
-if (csv == NULL){
-    printf("Error al abrir el csv\n");
-    return;
-}
-while (fgets(linea, sizeof(linea), csv) != NULL)
-{
-    linea[strcspn(linea, "\n")] = 0;
-    int i = 0;
-     token = strtok(linea, ",");
-      while (token != NULL && i < 5) {
-            campoCsv[i] = token; 
-            i++;
-            token = strtok(NULL, ","); 
-        }
-    Encuesta * newNode = (Encuesta*)malloc(sizeof(Encuesta));
-    newNode->Encuesta_Id = strtoll(campoCsv[0], NULL, 0);
-    strcpy(newNode->Denominacion, campoCsv[1]);
-    newNode->Encuesta_Mes = atoi(campoCsv[2]);
-    newNode->Encuesta_Anio = atoi(campoCsv[3]);
-    newNode->Procesada = atoi(campoCsv[4]);
-    apilar(newNode, head);
-}
-fclose(csv);
+	FILE * csv;
+	char linea [80];
+	char * token;
+	char * campoCsv[5];
+	fopen_s(&csv, "Encuesta.CSV", "r");
+	if (csv == NULL){
+	    printf("Error al abrir el csv\n");
+	    return;
+	}
+	while (fgets(linea, sizeof(linea), csv) != NULL)
+	{
+	    linea[strcspn(linea, "\n")] = 0;
+	    int i = 0;
+	     token = strtok(linea, ",");
+	      while (token != NULL && i < 5) {
+	            campoCsv[i] = token; 
+	            i++;
+	            token = strtok(NULL, ","); 
+	        }
+	    Encuesta * newNode = (Encuesta*)malloc(sizeof(Encuesta));
+	    newNode->Encuesta_Id = strtoll(campoCsv[0], NULL, 10);
+	    strcpy(newNode->Denominacion, campoCsv[1]);
+	    newNode->Encuesta_Mes = atoi(campoCsv[2]);
+	    newNode->Encuesta_Anio = atoi(campoCsv[3]);
+	    newNode->Procesada = atoi(campoCsv[4]);
+	    apilar(newNode, head);
+	}
+	fclose(csv);
 }
 void ListaDeEncuestas(Encuesta **head){
 	if (pilavacia(*head) == 1)
