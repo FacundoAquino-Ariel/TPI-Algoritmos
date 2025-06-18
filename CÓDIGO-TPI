@@ -798,11 +798,15 @@ void crudRespuestas(Pregunta *pl, Respuesta **l){
 	switch(opc){
 		case 0: printf("Quintana\n");break;
 		case 1: crearRespuesta(&(*l),pl,0,0); break;
-		case 2: printf("Ingrese el id respuesta a modificar:\n");
+		case 2: printf("|RESPUESTAS EXISTENTE|\n");
+				mostrarRespuestas((*l));
+				printf("Ingrese el id respuesta a modificar:\n");
 				fflush(stdin);
 				scanf("%lld",&id);
 				modificarRespuesta(*l,id);break;
-		case 3: printf("Ingrese el id respuesta a borrar:\n");
+		case 3: printf("|RESPUESTAS EXISTENTE|\n");
+				mostrarRespuestas((*l));
+				printf("Ingrese el id respuesta a borrar:\n");
 				fflush(stdin);
 				scanf("%lld",&id);
 				preBorrar(&(*l),id,*l,pl);break;
