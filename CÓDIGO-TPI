@@ -20,7 +20,7 @@ typedef struct Pregunta {
 
 typedef struct Encuesta {
     long long Encuesta_Id,Encuesta_Mes,Encuesta_Anio,Procesada;
-    char Denominacion[50];
+    char Denominacion[200];
     struct Encuesta* sgte;
 } Encuesta;
 
@@ -1253,7 +1253,7 @@ void crearEncuesta(Encuesta ** head){
 	newNode->sgte = NULL;
 	newNode->Encuesta_Id = randomNumber;
 	apilar(newNode, head);
-	printf("Nueva encuesta con el id %lld creada \n", newNode->Encuesta_Id);
+	printf("-----Encuesta nueva creada----- \n Denominacion: %s \n id: %lld \n fecha: %d/%d \n Estado de procesamiento: %d\n", newNode->Denominacion, newNode->Encuesta_Id, newNode->Encuesta_Mes, newNode->Encuesta_Anio, newNode->Procesada);
 	
 	fopen_s(&EncuestaCSV, "Encuesta.CSV", "a");
 	if (EncuestaCSV == NULL){
@@ -1304,7 +1304,7 @@ void ListaDeEncuestas(Encuesta **head){
 	nodeTmp = desapilar(head);
 	ListaDeEncuestas(head);
 	
-	printf("Denominacion: %s \n id: %lld \n fecha: %d/%d \n Estado de procesamiento: %d\n", nodeTmp->Denominacion, nodeTmp->Encuesta_Id, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
+	printf(" Denominacion: %s \n id: %lld \n fecha: %d/%d \n Estado de procesamiento: %d\n", nodeTmp->Denominacion, nodeTmp->Encuesta_Id, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
 }
 void modificarEncuesta(Encuesta **head, long long id, FILE *listaModificada)
@@ -1336,6 +1336,7 @@ if (pilavacia(*head) == 1)
 		nodeTmp->Denominacion[strcspn(nodeTmp->Denominacion, "\n")] = 0;
 		nodeTmp->Encuesta_Anio = monthYear->tm_year + 1900;
 		nodeTmp->Encuesta_Mes = monthYear->tm_mon + 1;
+		printf("-----Encuesta modificada----- \n Denominacion: %s \n id: %lld \n fecha: %d/%d \n Estado de procesamiento: %d\n", nodeTmp->Denominacion, nodeTmp->Encuesta_Id, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	}
 	fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
 	apilar(nodeTmp, head);
@@ -1361,6 +1362,7 @@ void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregun
     if (id == nodeTmp->Encuesta_Id) {
         borrarPregunta(headPr, id, headRe); 
         free(nodeTmp); 
+		printf("Encuesta %lld borrada", id);
         return;
     }
     fprintf(listaModificada, "%lld,%s,%d,%d,%d\n", nodeTmp->Encuesta_Id, nodeTmp->Denominacion, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
@@ -1387,7 +1389,7 @@ void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe)
 			break;
 
 		    case 2:
-		        printf("------Leyendo lista de encuestas------\n");
+		        printf("------lista de encuestas------\n");
 				ListaDeEncuestas(head);
 		    break;
 		    
