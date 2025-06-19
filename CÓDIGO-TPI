@@ -857,6 +857,7 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 	}
 	if(preg == 0){
 		printf("no existe el id pregunta, no se puede continuar\n");
+		free(p);
 		return;
 	}
 	//obtener el mayor numero de respuesta y ponerle +1
