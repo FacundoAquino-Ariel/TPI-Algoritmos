@@ -56,7 +56,7 @@ void leerCSVencuestas(Encuesta **head);
 //====|PREGUNTAS|TARNOWSKI|====
 void Crud_Preguntas(Encuesta **tp, Pregunta **l, Respuesta **respL);
 void cargarPreguntasDesdeCSV(Pregunta **head);
-void crearPregunta(Pregunta **l);
+void crearPregunta(Pregunta **l, Encuesta *e);
 Pregunta* insertarPregunta(Pregunta *p, Pregunta *r);
 void mostrarPregunta(Pregunta *l);
 void modificarPregunta(Pregunta *l, long long id);
@@ -81,7 +81,7 @@ void Leer_CSV_Encuestas_Respondidas(registry **);
 
 //====|CONSIGNAS|TODOS|====
 //====|PONDERACION X|====
-void ponderacion(registry *r, Encuesta *p, Pregunta *l, Respuesta *c, long long id);
+void ponderacion(registry *r, Encuesta *p, Pregunta *l, Respuesta *c, long long id, float *sumaTotal, int *cantidad,int *b);
 
 //====|MOSTRAR ENCUESTAS RESP EN EL ARBOL|====
 void mostrar_arbol(registry *);
@@ -94,7 +94,8 @@ void listarRespondidasPorEncuestaId(registry *raiz, long long idEncuestaOriginal
 
 //----------------|MAIN|----------------------------
 int main() {
-	int eleccion=-1;
+	int eleccion=-1,cantidadEncuestas = 0,b;
+	float totalPonderacion = 0;
 	long long id;
 	char auxiliar[50];
 	Pregunta *pregL = NULL;
@@ -108,132 +109,147 @@ int main() {
 	Leer_CSV_Encuestas_Respondidas(&raiz);
 	
 	while (eleccion != 0) {
- 		printf("====== MENU PRINCIPAL ======\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Procesamiento de Encuestas (Archivos)\n5. Mostrar datos del archivo.csv de encuestas respondidas\n6. Consignas\n0. Salir\nSeleccione una opcion: ");
-		fflush(stdin);
-    	fgets(auxiliar, sizeof(auxiliar), stdin);
-		eleccion = atoi(auxiliar);
-
-        switch (eleccion) {
-            case 1:
-                printf("Has elegido el modulo: CRUD de Encuestas\n");
-				menuEncuestas(&head, &pregL, &respL);
-                break;
-            case 2:
-                printf("Has elegido el modulo: CRUD de Preguntas\n");
-                Crud_Preguntas(&head, &pregL, &respL);
-                break;
-            case 3:
-                printf("Has elegido el modulo: CRUD de Respuestas\n");
-                crudRespuestas(pregL, &respL);
-        	break;
-            case 4:
-                printf("Has elegido el modulo: Mostrar datos del archivo.csv de encuestas respondidas\n");
-        	break;
-            case 5:
-				//TEGAN EL ARCHIVO CON LOS DATOS DENTRO DE LA CARPETA
-				printf("agregar un nuevo registro? 1=si 2=no: ");
-				fflush(stdin);
-				scanf("%d",&eleccion);
-				if(eleccion==1)
-					Agregar_Registro_Encuesta_Respondida();
-								
-            break;
-            case 6:
-            	puts("[CONSGINAS]\n1. Calcular ponderacion de una encuesta original/modelo X \n2. Mostrar todas las encuestas respondidas en ABB\n3. Mostrar encuestas respondidas una a una\n4. Encuestas respondidas de un modelo encuesta particular");
-            	fflush(stdin);
-				scanf("%d",&eleccion);
-				switch(eleccion){
-            		case 1:
-            			puts("ingrese id de encuesta orignal/modelo para calcular la ponderacion total de cada encuesta respondida que le pertenezca: ");
-            			fflush(stdin);
-						scanf("%lld",&id);
+		puts("\n================= MENU PRINCIPAL =================\n1. CRUD de Encuestas\n2. CRUD de Preguntas\n3. CRUD de Respuestas\n4. Consignas\n0. Salir\n==================================================\nSeleccione una opcion: ");
+	    fflush(stdin);
+	    fgets(auxiliar, sizeof(auxiliar), stdin);
+	    eleccion = atoi(auxiliar);
+	
+	    switch (eleccion) {
+	        case 1:
+	            menuEncuestas(&head, &pregL, &respL);
+	            break;
+	        case 2:
+	            Crud_Preguntas(&head, &pregL, &respL);
+	            break;
+	        case 3:
+	            crudRespuestas(pregL, &respL);
+	            break;
+	        case 4: {
+	            int subopcion;
+	            puts("\n================== CONSIGNAS =====================\n1. Calcular ponderacion de una encuesta modelo\n2. Mostrar todas las encuestas respondidas (ABB)\n3. Mostrar encuestas respondidas una a una\n4. Ver encuestas respondidas de un modelo especifico\n==================================================\nSeleccione una opcion: ");	            
+	            fflush(stdin);
+	            scanf("%d", &eleccion);
+	
+	            switch (eleccion) {
+	                case 1:
+	                	b=0;
+	                    printf("Ingrese el ID de la encuesta original: ");
+	                    fflush(stdin);
+	                    scanf("%lld", &id);
+	                    ponderacion(raiz, head, pregL, respL, id, &totalPonderacion, &cantidadEncuestas,&b);
 						
-            			ponderacion(raiz, head, pregL, respL,id);
-            		break;
-            		
-					case 2:
-						mostrar_arbol(raiz);
-            		break;
-            		
-            		case 3:
-            			puts("Encuestas respondidas completas:");         			
-            			mostrar_completa(raiz, head, pregL, respL);
-            		break;
-            		
-            		case 4:
-	            		puts("Ingrese ID de encuesta original/modelo para ver sus encuestas respondidas:");
-					    fflush(stdin);
-					    scanf("%lld", &id);
-					    printf("Listado de encuestas respondidas para el modelo %lld:\n", id);
-					    listarRespondidasPorEncuestaId(raiz, id);
-            		break;
-				}
-            break;
-            case 0:
-                printf("Saliendo del programa...\n");
-                break;
-            default:
-                printf("Opcion invalida. Intente de nuevo.\n");
-        }
-    }
+						if(b){
+							if (cantidadEncuestas > 0) {
+							    printf("\n================= RESUMEN TOTAL ENCUESTA ID = %d =================\n", 15);
+							    printf("| %-20s | %-40s \n", "Total Sum Pond", "Cant Pond");
+							    printf("| %-20.3f | %-40d \n", totalPonderacion, cantidadEncuestas);
+							    printf("| %-44s\n", " ");
+							    printf("| %-20s = %-20.3f \n", "PROMEDIO FINAL", totalPonderacion / cantidadEncuestas);
+							    printf("==================================================================\n");
+							} else
+							    printf("No se encontraron respuestas para la encuesta con ID %d\n", 15);
+						}else
+							puts("no se encontraron encuestas repondidadas con el ID encuesta original.");
+					break;
+	
+	                case 2:
+	                    mostrar_arbol(raiz);
+	                break;
+	
+	                case 3:
+	                    printf("Encuestas respondidas completas:\n");
+	                    mostrar_completa(raiz, head, pregL, respL);
+	                    break;
+	
+	                case 4:
+	                    printf("Ingrese el ID del modelo de encuesta: ");
+	                    fflush(stdin);
+	                    scanf("%lld", &id);
+	                    printf("Listado de encuestas respondidas para el modelo %lld:\n", id);
+	                    listarRespondidasPorEncuestaId(raiz, id);
+	                    break;
+	
+	                default:
+	                    printf("Opción inválida en consignas.\n");
+	            }
+	            break;
+	        }
+	        case 0:
+	            printf("Saliendo del programa...\n");
+	            break;
+	
+	        default:
+	            printf("Opción inválida. Intente de nuevo.\n");
+	    }
+	}
+
 	
 	return 0;
 }
-//===================================|FUNCIONES|===================================
-void ponderacion(registry *r, Encuesta *p, Pregunta *l, Respuesta *c, long long id){
-	
-	if (r == NULL)
-	        return;
-    // Llamada recursiva al subárbol izquierdo
-    ponderacion(r->izq, p, l, c, id);
 
-    // Si la encuesta respondida pertenece a la encuesta original indicada
-    if (r->Encuesta_Id == id){
-        int band;
+//===================================|FUNCIONES|===================================
+void ponderacion(registry *r, Encuesta *p, Pregunta *l, Respuesta *c, long long id, float *sumaTotal, int *cantidad,int *b){
+    if (r == NULL)
+        return;
+
+    // Recorrer subarbol izquierdo
+    ponderacion(r->izq, p, l, c, id, sumaTotal, cantidad,b);
+
+    if (r->Encuesta_Id == id) {
+    	*b=1;
         float pond = 0;
+        int band;
         Pregunta *auxl = NULL;
         Respuesta *auxc = NULL;
         Marcado *auxa = r->listaPreguntas;
 
-        printf("Encuesta Respondida ID %lld encontrada\n", r->idEncuestaRespondida);
-        puts("-------------------------------------------");
+        printf("\n==================================================\n");
+        printf(" Encuesta Respondida ID: %lld\n", r->idEncuestaRespondida);
+        printf("==================================================\n");
 
         while (auxa != NULL) {
-            
-			auxl = l;
+            auxl = l;
             band = 0;
+
+            // Buscar pregunta correspondiente
             while (auxl != NULL && band == 0) {
-                if(auxl->Pregunta_Id == auxa->Pregunta_Id){
-                    printf("%lld pregunta: %.2f\n", auxl->Pregunta_Id, auxl->Ponderacion);
+                if (auxl->Pregunta_Id == auxa->Pregunta_Id) {
+                    printf("\n[Pregunta ID: %lld] | Ponderacion: %.2f\n", auxl->Pregunta_Id, auxl->Ponderacion);
                     band = 1;
-                } else
-                    auxl = auxl->sgte;       
+                } else {
+                    auxl = auxl->sgte;
+                }
             }
 
+            // Buscar respuesta y calcular ponderacion
             if (band == 1 && c != NULL) {
-                
-				band = 0;
+                band = 0;
                 auxc = c;
+
                 do {
                     if (auxc->Respuesta_Id == auxa->Respuesta_Id) {
                         pond += auxc->Ponderacion * auxl->Ponderacion;
-                        printf("%lld respuesta %.2f [valor] %.2f\tponderacion acumulada %.2f\n",auxc->Respuesta_Id, auxc->Ponderacion, auxc->Ponderacion * auxl->Ponderacion, pond);
+                        printf("Respuesta ID: %lld | Ponderacion: %.2f | Valor: %.2f | Acumulado: %.2f\n",auxc->Respuesta_Id, auxc->Ponderacion, auxc->Ponderacion * auxl->Ponderacion, pond);
                         band = 1;
-                    } else
+                    } else {
                         auxc = auxc->sgte;
-                    
+                    }
                 } while (auxc != c && band == 0);
             }
 
-            puts("-------------------------------------------");
             auxa = auxa->sgte;
         }
 
-        printf("\t\tEncuesta respondida ID %lld con ponderacion total: [%.2f]\n\n", r->idEncuestaRespondida, pond);	
+        printf("--------------------------------------------------\n");
+        printf("Total ponderado para Encuesta Respondida ID %lld: [ %.3f ]\n", r->idEncuestaRespondida, pond);
+        printf("==================================================\n");
+
+        *sumaTotal += pond;
+        (*cantidad)++;
     }
 
-    // Llamada recursiva al subárbol derecho
-    ponderacion(r->der, p, l, c, id);	
+    // Recorrer subarbol derecho
+    ponderacion(r->der, p, l, c, id, sumaTotal, cantidad,b);
 }
 
 void mostrar_completa(registry *a, Encuesta *p, Pregunta *l, Respuesta *c){
@@ -441,63 +457,78 @@ void mostrar_arbol(registry *r) {
 }
 
 //===================================|PREGUNTAS|===================================
-void Crud_Preguntas(Encuesta **tp, Pregunta **l, Respuesta **respL){
-	int eleccion=-1;
-	long long id;
-	
+void Crud_Preguntas(Encuesta **tp, Pregunta **l, Respuesta **respL) {
+    int eleccion = -1;
+    long long id;
 
-    // Mostrar preguntas para verificar
     Pregunta *aux = *l;
 
-	
-	printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Modificar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: "); 
-	fflush(stdin);
+    puts(
+        "\n=========== MENU DE PREGUNTAS ===========\n"
+        "1. Crear pregunta\n"
+        "2. Leer preguntas\n"
+        "3. Modificar pregunta\n"
+        "4. Borrar pregunta\n"
+        "0. Volver al menu anterior\n"
+        "=========================================\n"
+        "Seleccione una opcion: "
+    );
+    fflush(stdin);
     scanf("%d", &eleccion);
-	while (eleccion != 0) {
-	
 
+    while (eleccion != 0) {
         switch (eleccion) {
-			case 1:
-			ListaDeEncuestas(tp); 
-			puts("----Se han listado las encuestas para poder crear preguntas correctamente----"); 
-		        puts("Has elegido el modulo: Crear pregunta");
-		        crearPregunta(l);
-		    break;
+            case 1:
+                ListaDeEncuestas(tp); 
+                puts(">>> Se han listado las encuestas para crear preguntas correctamente.");
+                puts(">>> Modulo: Crear pregunta");
+                crearPregunta(l,*tp);
+                break;
 
-		    case 2:
-		        puts("Has elegido el modulo: Leer pregunta");
-		        mostrarPregunta(*l);
-		    break;
-		    
-		    case 3:
-		        puts("Has elegido el modulo: Modificar pregunta");   
-		        printf("Ingrese ID de pregunta a modificar: ");
+            case 2:
+                puts(">>> Modulo: Leer preguntas");
+                mostrarPregunta(*l);
+                break;
+
+            case 3:
+                puts(">>> Modulo: Modificar pregunta");
+                printf("Ingrese el ID de la pregunta a modificar: ");
                 scanf("%lld", &id);
                 modificarPregunta(*l, id);
-			break;
-			
-		    case 4:
-		    	ListaDeEncuestas(tp); 
-		    	puts("----Se han listado las encuestas para poder borrar preguntas correctamente----"); 
-		        puts("Has elegido el modulo: Borrar pregunta ");
-		        printf("Ingrese ID de encuesta de preguntas a borrar: ");
+                break;
+
+            case 4:
+                ListaDeEncuestas(tp);
+                puts(">>> Se han listado las encuestas para borrar preguntas correctamente.");
+                puts(">>> Modulo: Borrar pregunta");
+                printf("Ingrese el ID de la encuesta de las preguntas a borrar: ");
                 scanf("%lld", &id);
                 borrarPregunta(l, id, respL);
-		    break;
-		    
-		    case 0:
-		        puts("Saliendo del modulo...");
-		    break;
-		    
-		    default:
-		        puts("Opcion invalida. Intente de nuevo.");
+                break;
+
+            case 0:
+                puts(">>> Saliendo del modulo de preguntas...");
+                break;
+
+            default:
+                puts(">>> Opcion invalida. Intente de nuevo.");
         }
-        
-		printf("----- Menu de Preguntas ------- \n 1 - Crear  \n 2 - Leer  \n 3 - Modificar \n 4 - Borrar \n 0 - Salir \n Ingrese una opcion: ");
-	 	fflush(stdin);
- 		scanf("%d", &eleccion);
+
+        puts(
+            "\n=========== MENU DE PREGUNTAS ===========\n"
+            "1. Crear pregunta\n"
+            "2. Leer preguntas\n"
+            "3. Modificar pregunta\n"
+            "4. Borrar pregunta\n"
+            "0. Volver al menu anterior\n"
+            "=========================================\n"
+            "Seleccione una opcion: "
+        );
+        fflush(stdin);
+        scanf("%d", &eleccion);
     }
 }
+
 
 void cargarPreguntasDesdeCSV(Pregunta **head) {
     FILE *archivo = fopen("preguntas.csv", "r");
@@ -579,67 +610,82 @@ void cargarPreguntasDesdeCSV(Pregunta **head) {
     fclose(archivo);	
 }
 
-void crearPregunta(Pregunta **l){
-    Pregunta *p;
-    Pregunta *aux;
-    long long nuevoid = 1;
-
-    p = (Pregunta *) malloc(sizeof(Pregunta));
-    if (p == NULL) {
-        printf("No hay espacio de memoria.\n");
-        return;  
-    }
+void crearPregunta(Pregunta **l, Encuesta *e){
+    Pregunta *p=NULL, *aux=NULL;
+    Encuesta *auxe=e;
+    long long nuevoid = 1, eid;
+    int existeEncuesta = 0;
     
-    // Obtener nuevo ID
-    if (*l != NULL) {
-        aux = *l;     
-        nuevoid = aux->Pregunta_Id;
-        while (aux != NULL) {
-            if (aux->Pregunta_Id > nuevoid)
-                nuevoid = aux->Pregunta_Id;
-            aux = aux->sgte;
-        }
-        p->Pregunta_Id = nuevoid + 1;
-    } else {
-        p->Pregunta_Id = 1;
-    }
-
     // Pedir datos
     printf("Ingrese ID de la encuesta asociada: ");
-    scanf("%lld", &p->Encuesta_Id);
-    
     fflush(stdin);
-    printf("Ingrese el texto de la pregunta: ");
-    fgets(p->Pregunta, 50, stdin);
-    p->Pregunta[strcspn(p->Pregunta, "\n")] = '\0';
-
-    // Calcular suma de ponderaciones existentes para esta encuesta
-    float sumaPonderacion = 0.0;
-    Pregunta *temp = *l;
-    while (temp != NULL) {
-        if (temp->Encuesta_Id == p->Encuesta_Id)
-            sumaPonderacion += temp->Ponderacion;
-        temp = temp->sgte;
-    }
-
-    if (sumaPonderacion >= 1.0) {
-        printf("No se puede agregar más preguntas a esta encuesta. Ponderación total alcanzada.\n");
-        free(p);
-        return;
-    }
-
-    printf("Ingrese la ponderación (0.01 a %.2f): ", 1.0 - sumaPonderacion);
-    scanf("%f", &p->Ponderacion);
-
-    if (p->Ponderacion <= 0.0 || sumaPonderacion + p->Ponderacion > 1.0) {
-        printf("Error: La suma de ponderaciones no puede exceder 1.0.\n");
-        free(p);
-        return;
-    }
-
-    // Insertar recursivamente (ordenado por ID)
-    *l = insertarPregunta(p, *l);
-    printf("Pregunta creada con ID: %lld\n", p->Pregunta_Id);
+    scanf("%lld", &eid);
+    
+    //buscar si existe la encuesta para proseguir con la creacion de la pregunta
+    while (auxe != NULL && !existeEncuesta){
+	    if (auxe->Encuesta_Id == eid){
+			existeEncuesta = 1;
+		}else
+	        auxe = auxe->sgte;
+	}
+    
+    if(existeEncuesta){
+		p = (Pregunta *) malloc(sizeof(Pregunta));
+	    if (p == NULL) {
+	        printf("No hay espacio de memoria.\n");
+	        return;  
+	    }
+	    
+		p->Encuesta_Id=eid;
+	    
+	    // Obtener nuevo ID
+	    if (*l != NULL) {
+	        aux = *l;     
+	        nuevoid = aux->Pregunta_Id;
+	        while (aux != NULL) {
+	            if (aux->Pregunta_Id > nuevoid)
+	                nuevoid = aux->Pregunta_Id;
+	            aux = aux->sgte;
+	        }
+	        p->Pregunta_Id = nuevoid + 1;
+	    } else {
+	        p->Pregunta_Id = 1;
+	    }
+	
+	    
+	    printf("Ingrese el texto de la pregunta: ");
+	    fgets(p->Pregunta, 50, stdin);
+	    p->Pregunta[strcspn(p->Pregunta, "\n")] = '\0';
+	
+	    // Calcular suma de ponderaciones existentes para esta encuesta
+	    float sumaPonderacion = 0.0;
+	    Pregunta *temp = *l;
+	    while (temp != NULL) {
+	        if (temp->Encuesta_Id == p->Encuesta_Id)
+	            sumaPonderacion += temp->Ponderacion;
+	        temp = temp->sgte;
+	    }
+	
+	    if (sumaPonderacion >= 1.0) {
+	        printf("No se puede agregar mas preguntas a esta encuesta. Ponderacion total alcanzada.\n");
+	        free(p);
+	        return;
+	    }
+	
+	    printf("Ingrese la ponderación (0.01 a %.2f): ", 1.0 - sumaPonderacion);
+	    scanf("%f", &p->Ponderacion);
+	
+	    if (p->Ponderacion <= 0.0 || sumaPonderacion + p->Ponderacion > 1.0) {
+	        printf("Error: La suma de ponderaciones no puede exceder 1.0.\n");
+	        free(p);
+	        return;
+	    }
+	
+	    // Insertar recursivamente (ordenado por ID)
+	    *l = insertarPregunta(p, *l);
+	    printf("Pregunta creada con ID: %lld\n", p->Pregunta_Id);
+	}else
+		puts("Encuesta original NO encontrada");
 }
 
 
@@ -653,16 +699,34 @@ Pregunta* insertarPregunta(Pregunta *p, Pregunta *r) {
     }
 }
 
-void mostrarPregunta(Pregunta *l){
-	if (l == NULL) {
+void mostrarPregunta(Pregunta *l) {
+    if (l == NULL) {
         puts("No hay preguntas cargadas.");
         return;
     }
-    puts("Lista de preguntas:");
+
+    printf("\n| PREGUNTAS EXISTENTES |\n");
+    printf("====================================================================================================\n");
+    printf("| %-12s | %-12s | %-50s | %-10s |\n", 
+           "PREGUNTA ID", "ENCUESTA ID", "PREGUNTA", "PONDERACION");
+    printf("====================================================================================================\n");
+
     while (l != NULL) {
-        printf("\nID: %lld\nEncuesta ID: %lld\nTexto: %s\nPonderacion: %.2f\n", l->Pregunta_Id, l->Encuesta_Id, l->Pregunta, l->Ponderacion);
+        char preguntaCortada[51];
+        strncpy(preguntaCortada, l->Pregunta, 50);
+        preguntaCortada[50] = '\0'; // Asegurarse del terminador
+
+        printf("| %-12lld | %-12lld | %-50s | %-10.2f  |\n", 
+               l->Pregunta_Id, 
+               l->Encuesta_Id, 
+               preguntaCortada, 
+               l->Ponderacion);
+
         l = l->sgte;
     }
+
+    printf("====================================================================================================\n");
+    printf("--- FIN DE LOS ID PREGUNTAS EXISTENTES ---\n");
 }
 
 void modificarPregunta(Pregunta *l, long long id) {
@@ -681,12 +745,12 @@ void modificarPregunta(Pregunta *l, long long id) {
     fgets(actual->Pregunta, 50, stdin);
     actual->Pregunta[strcspn(actual->Pregunta, "\n")] = '\0';
 
-    printf("Ingrese nueva ponderación: ");
+    printf("Ingrese nueva ponderacion: ");
     float nuevaPond;
     scanf("%f", &nuevaPond);
 
     if (nuevaPond <= 0.0 || nuevaPond > 1.0) {
-        puts("Ponderación inválida. Debe estar entre 0.01 y 1.0");
+        puts("Ponderación invalida. Debe estar entre 0.01 y 1.0");
         return;
     }
 
@@ -783,36 +847,52 @@ void borrarRespuestasPorPreguntaId(Respuesta **l, long long preguntaId) {
 
 
 //===================================|RESPUESTAS|===================================
-void crudRespuestas(Pregunta *pl, Respuesta **l){
-	int opc;
-	long long id;//opc para ocpion del crud e id para buscar el de modificar y para buscar el id a borrar]
+void crudRespuestas(Pregunta *pl, Respuesta **l) {
+    int opc;
+    long long id;
 	
-	printf("====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n0.Salir\n|Ingrese una opcion:|\n");
-	fflush(stdin);
-	scanf("%d",&opc);
-	while(opc < 0 || opc > 5){
-		printf("|Opcion invalida!|\n|Ingrese nuevamente|\n====== |MENU CRUD RESPUESTAS| ======\n1.Agregar una respuesta\n2.Modificar una respuesta\n3.Borrar una respuesta\n4.Mostrar respuestas\n0.Salir\n|Ingrese una opcion:|\n");
-		fflush(stdin);
-		scanf("%d",&opc);
-	}
-	switch(opc){
-		case 0: printf("Quintana\n");break;
-		case 1: crearRespuesta(&(*l),pl,0,0); break;
-		case 2: printf("|RESPUESTAS EXISTENTE|\n");
-				mostrarRespuestas((*l));
-				printf("Ingrese el id respuesta a modificar:\n");
-				fflush(stdin);
-				scanf("%lld",&id);
-				modificarRespuesta(*l,id);break;
-		case 3: printf("|RESPUESTAS EXISTENTE|\n");
-				mostrarRespuestas((*l));
-				printf("Ingrese el id respuesta a borrar:\n");
-				fflush(stdin);
-				scanf("%lld",&id);
-				preBorrar(&(*l),id,*l,pl);break;
-		case 4: mostrarRespuestas((*l));break;
-		default: printf("Opcion invalida, Intente nuevamente!\n");
-	}
+	puts("\n============= MENU CRUD RESPUESTAS =============\n1. Agregar una respuesta\n2. Modificar una respuesta\n3. Borrar una respuesta\n4. Mostrar respuestas\n0. Salir\n===============================================\nSeleccione una opcion: ");
+    fflush(stdin);
+    scanf("%d", &opc);
+
+    while (opc < 0 || opc > 4) {
+        puts("\n¡Opcion invalida! Intente nuevamente.\n============= MENU CRUD RESPUESTAS =============\n1. Agregar una respuesta\n2. Modificar una respuesta\n3. Borrar una respuesta\n4. Mostrar respuestas\n0. Salir\n===============================================\nSeleccione una opcion: ");
+        fflush(stdin);
+        scanf("%d", &opc);
+    }
+
+    switch (opc) {
+        case 0:
+            printf("Saliendo del CRUD de Respuestas...\n");
+            break;
+
+        case 1:
+            crearRespuesta(l, pl, 0, 0);
+            break;
+
+        case 2:
+            puts("\n======= RESPUESTAS EXISTENTES =======");
+            mostrarRespuestas(*l);
+            printf("Ingrese el ID de la respuesta a modificar: ");
+            fflush(stdin);
+            scanf("%lld", &id);
+            modificarRespuesta(*l, id);
+            break;
+
+        case 3:
+            puts("\n======= RESPUESTAS EXISTENTES =======");
+            mostrarRespuestas(*l);
+            printf("Ingrese el ID de la respuesta a borrar: ");
+            fflush(stdin);
+            scanf("%lld", &id);
+            preBorrar(l, id, *l, pl);
+            break;
+
+        case 4:
+            puts("\n======= RESPUESTAS EXISTENTES =======");
+            mostrarRespuestas(*l);
+            break;
+    }
 }
 void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //el parametro "uno" sirve para determinar si la ponderacion de la respuesta es "1" u otro valor, 1=1|0=x
 	Respuesta *aux = NULL; //sirve solo para recorrer la lista y buscar el maximo id
@@ -840,9 +920,7 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 	//cargar id pregunta
 	//si idPreg es 0, entonces el idPregunta puede ser cualquier numero
 	if(idPreg == 0){
-		printf("---MOSTRANDO LOS ID PREGUNTAS EXISTENTES---\n");
 		mostrarPregunta(pl);
-		printf("---FIN DE LOS ID PREGUNTAS EXISTENTES---\n");
 		fflush(stdin);
 		printf("pregunta id:\n");
 		scanf("%lld",&p->Pregunta_Id);
@@ -952,20 +1030,28 @@ void insertarRespuesta(Respuesta **l, Respuesta *nv, Respuesta *r){
 	}
 }
 
-void mostrarRespuestas(Respuesta *l){
-	Respuesta *r;
-	r = l;
-	if(l != NULL){
-		printf("RESPUESTA ID: %lld | PREGUNTA ID: %lld | RESPUESTA NRO: %d | RESPUESTA: %s | PONDERACION: %.2f\n",l->Respuesta_Id,l->Pregunta_Id,l->Respuesta_Nro,l->Respuesta,l->Ponderacion);
-		l = l->sgte;
-		while(l != r){
-			printf("RESPUESTA ID: %lld | PREGUNTA ID: %lld | RESPUESTA NRO: %d | RESPUESTA: %s | PONDERACION: %.2f\n",l->Respuesta_Id,l->Pregunta_Id,l->Respuesta_Nro,l->Respuesta,l->Ponderacion);
-			l = l->sgte;
-		}
-	}else{
-		printf("La lista esta vacia\n");
-	}
+void mostrarRespuestas(Respuesta *l) {
+    Respuesta *r = l;
+
+    if (l != NULL) {
+        // Encabezado
+        printf("--------------------------------------------------------------------------------------------------------------\n");
+        printf("| %-12s | %-12s | %-14s | %-30s | %-12s |\n", 
+               "RESPUESTA ID", "PREGUNTA ID", "RESPUESTA NRO", "RESPUESTA", "PONDERACION");
+        printf("--------------------------------------------------------------------------------------------------------------\n");
+
+        do {
+            printf("| %-12lld | %-12lld | %-14d | %-30s | %-12.2f |\n", 
+                   l->Respuesta_Id, l->Pregunta_Id, l->Respuesta_Nro, l->Respuesta, l->Ponderacion);
+            l = l->sgte;
+        } while (l != r);
+
+        printf("--------------------------------------------------------------------------------------------------------------\n");
+    } else {
+        printf("La lista está vacía\n");
+    }
 }
+
 
 void modificarRespuesta(Respuesta *l, long long id){
 	Respuesta *r; // "r" representa en todos los casos donde comienza y termina la lista para no tener entrar en bucle infinito
@@ -1299,21 +1385,41 @@ void leerCSVencuestas(Encuesta **head) {
 	}
 	fclose(csv);
 }
-void ListaDeEncuestas(Encuesta **head){
-	if (pilavacia(*head) == 1)
-	{
-		return;
-	}
-	
-	Encuesta * nodeTmp = NULL;
-	nodeTmp = desapilar(head);
-	ListaDeEncuestas(head);
-	
-	printf(" Denominacion: %s \n id: %lld \n fecha: %d/%d \n Estado de procesamiento: %d\n", nodeTmp->Denominacion, nodeTmp->Encuesta_Id, nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio, nodeTmp->Procesada);
-	apilar(nodeTmp, head);
+
+void ListaDeEncuestas(Encuesta **head) {
+    if (pilavacia(*head) == 1)
+        return;
+
+    Encuesta *nodeTmp = NULL;
+    nodeTmp = desapilar(head);
+    ListaDeEncuestas(head);  // Recursividad para llegar al fondo
+
+    // Encabezado una sola vez
+    static int primeraVez = 1;
+    if (primeraVez) {
+        puts("\n| ENCUESTAS EXISTENTES |");
+        puts("===========================================================================");
+        printf("| %-12s | %-30s | %-10s | %-10s |\n", 
+               "ENCUESTA ID", "DENOMINACION", "FECHA", "PROCESADA");
+        puts("===========================================================================");
+        primeraVez = 0;
+    }
+
+    // Formatear fecha como MM/AAAA
+    char fecha[10];
+    snprintf(fecha, sizeof(fecha), "%02d/%d", nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio);
+
+    // Imprimir fila
+    printf("| %-12lld | %-30s | %-10s | %-10d |\n",
+           nodeTmp->Encuesta_Id,
+           nodeTmp->Denominacion,
+           fecha,
+           nodeTmp->Procesada);
+
+    apilar(nodeTmp, head);  // Volver a apilar el nodo
 }
-void modificarEncuesta(Encuesta **head, long long id, FILE *listaModificada)
-{
+
+void modificarEncuesta(Encuesta **head, long long id, FILE *listaModificada){
 if (pilavacia(*head) == 1)
 	{
 		return;
@@ -1375,61 +1481,61 @@ void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregun
 }
 
 	
-void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe)
-{
-	int i = 10;
-	char auxiliar[50];
-	FILE * listaModificada = NULL;
+void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe) {
+    int opcion = 10;
+    char auxiliar[50];
+    FILE *listaModificada = NULL;
 
-	while (i != 0) {
-		
-		printf("----- Menu de Encuestas ------- \n 1 - Nueva encuesta  \n 2 - Lista de encuestas  \n 3 - Modificar encuesta \n 4 - Borrar encuesta \n 0 - Salir \n Ingrese una opcion: "); 
-		fgets(auxiliar, sizeof(auxiliar), stdin);
-		i = atoi(auxiliar);
-		printf("\n");
-        switch (i) {
-			case 1:
-				printf("------Creando nueva encuesta------\n");
-				crearEncuesta(head);
-			break;
+    while (opcion != 0) {
+        puts("\n=========== MENU DE ENCUESTAS ===========\n""1. Crear nueva encuesta\n""2. Listar encuestas\n""3. Modificar encuesta\n""4. Eliminar encuesta\n""0. Volver al menu principal\n""=========================================\n""Seleccione una opcion: "
+);
 
-		    case 2:
-		        printf("------lista de encuestas------\n");
-				ListaDeEncuestas(head);
-		    break;
-		    
-		    case 3:
-			printf("------Modificando encuesta------\n");   
-			remove("Encuesta.CSV");
-			fopen_s(&listaModificada, "Encuesta.CSV", "a");
-			if (listaModificada == NULL){
-				printf("Error al abrir el csv\n");
-				return;
-			}
-			modificarEncuesta(head, 0, listaModificada);
-			fclose(listaModificada);
-				
-			break;
-			
-		    case 4:
-		        printf("------Borrar encuesta------\n");
-				remove("Encuesta.CSV");
-				fopen_s(&listaModificada, "Encuesta.CSV", "a");
-				if (listaModificada == NULL){
-				printf("Error al abrir el csv\n");
-				return;
-				}
-				borrarEncuesta(head, 0, listaModificada, headPr, headRe);
-				fclose(listaModificada);
-		    break;
-		    
-		    case 0:
-		        printf("------Volviendo al menu principal------\n");
-		    break;
-		    
-		    default:
-		        puts("Opcion invalida. Intente de nuevo.\n");
-			break;
+        fgets(auxiliar, sizeof(auxiliar), stdin);
+        opcion = atoi(auxiliar);
+        printf("\n");
+
+        switch (opcion) {
+            case 1:
+                puts(">>> Creando nueva encuesta...");
+                crearEncuesta(head);
+                break;
+
+            case 2:
+                puts(">>> Mostrando lista de encuestas...");
+                ListaDeEncuestas(head);
+                break;
+
+            case 3:
+                puts(">>> Modificando encuesta...");
+                remove("Encuesta.CSV");
+                fopen_s(&listaModificada, "Encuesta.CSV", "a");
+                if (listaModificada == NULL) {
+                    puts("Error al abrir el archivo Encuesta.CSV.");
+                    return;
+                }
+                modificarEncuesta(head, 0, listaModificada);
+                fclose(listaModificada);
+                break;
+
+            case 4:
+                puts(">>> Eliminando encuesta...");
+                remove("Encuesta.CSV");
+                fopen_s(&listaModificada, "Encuesta.CSV", "a");
+                if (listaModificada == NULL) {
+                    puts("Error al abrir el archivo Encuesta.CSV.");
+                    return;
+                }
+                borrarEncuesta(head, 0, listaModificada, headPr, headRe);
+                fclose(listaModificada);
+                break;
+
+            case 0:
+                puts(">>> Volviendo al menu principal...");
+                break;
+
+            default:
+                puts(">>> Opcion invalida. Intente de nuevo.");
+                break;
         }
     }
 }
