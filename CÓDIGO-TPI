@@ -809,24 +809,7 @@ void modificarPregunta(Pregunta **l, long long id, Encuesta *e) { //
     }
 }
 
-void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res, Encuesta *e) { //
-    Encuesta *auxe = e;
-    int existeEncuesta = 0;
-
-    // Verificar si existe la encuesta con ese ID
-    while (auxe != NULL) {
-        if (auxe->Encuesta_Id == encuestaId) {
-            existeEncuesta = 1;
-            break;
-        }
-        auxe = auxe->sgte;
-    }
-
-    if (!existeEncuesta) {
-        printf("No existe la encuesta con ID %lld. No se borraran preguntas.\n", encuestaId);
-        return;
-    }
-
+void borrarPregunta(Pregunta **l, long long encuestaId, Respuesta **res, Encuesta *e) {
     Pregunta *act = *l, *ant = NULL, *bor;
     int borradas = 0;
 
