@@ -1450,9 +1450,8 @@ void ListaDeEncuestas(Encuesta **head) {
 
     Encuesta *nodeTmp = NULL;
     nodeTmp = desapilar(head);
-    ListaDeEncuestas(head);  // Recursividad para llegar al fondo
+    ListaDeEncuestas(head);  
 
-    // Encabezado una sola vez
     static int primeraVez = 1;
     if (primeraVez) {
         puts("\n| ENCUESTAS EXISTENTES |");
@@ -1463,18 +1462,18 @@ void ListaDeEncuestas(Encuesta **head) {
         primeraVez = 0;
     }
 
-    // Formatear fecha como MM/AAAA
+
     char fecha[10];
     snprintf(fecha, sizeof(fecha), "%02d/%d", nodeTmp->Encuesta_Mes, nodeTmp->Encuesta_Anio);
 
-    // Imprimir fila
+
     printf("| %-12lld | %-30s | %-10s | %-10d |\n",
            nodeTmp->Encuesta_Id,
            nodeTmp->Denominacion,
            fecha,
            nodeTmp->Procesada);
 
-    apilar(nodeTmp, head);  // Volver a apilar el nodo
+    apilar(nodeTmp, head);  
 }
 
 void modificarEncuesta(Encuesta **head, long long id, FILE *listaModificada){
@@ -1529,7 +1528,7 @@ void borrarEncuesta(Encuesta **head, long long id, FILE *listaModificada, Pregun
     borrarEncuesta(head, id, listaModificada, headPr, headRe); 
 
     if (id == nodeTmp->Encuesta_Id) {
-        borrarPregunta(headPr, id, headRe, *head); //
+        borrarPregunta(headPr, id, headRe, *head); 
         free(nodeTmp); 
 		printf("Encuesta %lld borrada", id);
         return;
