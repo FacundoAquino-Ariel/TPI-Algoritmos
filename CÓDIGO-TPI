@@ -1539,14 +1539,15 @@ void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe) {
             case 1:
                 puts(">>> Creando nueva encuesta...");
                 crearEncuesta(head);
-                break;
+            break;
 
             case 2:
                 puts(">>> Mostrando lista de encuestas...");
                 ListaDeEncuestas(head);
-                break;
-
+            break;
+                
             case 3:
+                ListaDeEncuestas(head);
                 puts(">>> Modificando encuesta...");
                 remove("Encuesta.CSV");
                 fopen_s(&listaModificada, "Encuesta.CSV", "a");
@@ -1557,8 +1558,9 @@ void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe) {
                 modificarEncuesta(head, 0, listaModificada);
                 fclose(listaModificada);
                 break;
-
+                
             case 4:
+                ListaDeEncuestas(head);
                 puts(">>> Eliminando encuesta...");
                 remove("Encuesta.CSV");
                 fopen_s(&listaModificada, "Encuesta.CSV", "a");
@@ -1568,7 +1570,7 @@ void menuEncuestas(Encuesta **head, Pregunta **headPr, Respuesta **headRe) {
                 }
                 borrarEncuesta(head, 0, listaModificada, headPr, headRe);
                 fclose(listaModificada);
-                break;
+            break;
 
             case 0:
                 puts(">>> Volviendo al menu principal...");
