@@ -990,6 +990,7 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 		}
 	}else{//si idPreg es distinto de 0, entonces el idPregunta va a ser idPreg
 		p->Pregunta_Id = idPreg;
+		preg = 1;
 	}
 	if(preg == 0){
 		printf("no existe el id pregunta, no se puede continuar\n");
