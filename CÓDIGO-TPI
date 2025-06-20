@@ -1,5 +1,6 @@
 #include <stdio.h>
 #define _CRT_RAND_S
+#define EPSILON 0.0001
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -612,18 +613,16 @@ void cargarPreguntasDesdeCSV(Pregunta **head) {
     fclose(archivo);	
 }
 
-void crearPregunta(Pregunta **l, Encuesta *e) { //
+void crearPregunta(Pregunta **l, Encuesta *e) {
     Pregunta *p = NULL, *aux = NULL;
     Encuesta *auxe = e;
     long long nuevoid = 1, eid;
     int existeEncuesta = 0;
-    
-    // Pedir ID de Encuesta
+
     printf("Ingrese ID de la encuesta asociada: ");
     fflush(stdin);
     scanf("%lld", &eid);
-    
-    // Buscar si la encuesta existe
+
     while (auxe != NULL && !existeEncuesta) {
         if (auxe->Encuesta_Id == eid) {
             existeEncuesta = 1;
@@ -631,13 +630,12 @@ void crearPregunta(Pregunta **l, Encuesta *e) { //
             auxe = auxe->sgte;
         }
     }
-    
+
     if (!existeEncuesta) {
         puts("Encuesta NO encontrada.");
         return;
     }
 
-    // Calcular suma de ponderaciones actuales
     float sumaPonderacion = 0.0;
     Pregunta *temp = *l;
     while (temp != NULL) {
@@ -646,8 +644,7 @@ void crearPregunta(Pregunta **l, Encuesta *e) { //
         temp = temp->sgte;
     }
 
-    // Cargar preguntas hasta completar ponderación 1.0
-    while (sumaPonderacion < 1.0) {
+    while (sumaPonderacion + EPSILON < 1.0) { // margen aquí
         p = (Pregunta *)malloc(sizeof(Pregunta));
         if (p == NULL) {
             printf("No hay espacio de memoria.\n");
@@ -656,7 +653,6 @@ void crearPregunta(Pregunta **l, Encuesta *e) { //
 
         p->Encuesta_Id = eid;
 
-        // Obtener nuevo ID
         nuevoid = 1;
         aux = *l;
         while (aux != NULL) {
@@ -672,26 +668,26 @@ void crearPregunta(Pregunta **l, Encuesta *e) { //
         p->Pregunta[strcspn(p->Pregunta, "\n")] = '\0';
 
         float maxPermitido = 1.0 - sumaPonderacion;
+
         printf("Ingrese la ponderacion (0.01 a %.2f): ", maxPermitido);
         scanf("%f", &p->Ponderacion);
 
-        if (p->Ponderacion < 0.01 || p->Ponderacion > maxPermitido) {
+        if (p->Ponderacion < 0.01 - EPSILON || p->Ponderacion > maxPermitido + EPSILON) {
             printf("Error: La ponderacion debe ser entre 0.01 y %.2f\n", maxPermitido);
             free(p);
-            continue; // Volver a intentar
+            continue;
         }
 
         sumaPonderacion += p->Ponderacion;
         *l = insertarPregunta(p, *l);
         printf("Pregunta creada con ID: %lld (Ponderacion acumulada: %.2f/1.0).\nDebe continuar creando preguntas hasta completar 1.0.\n", p->Pregunta_Id, sumaPonderacion);
 
-        if (sumaPonderacion >= 1.0) {
+        if (sumaPonderacion + EPSILON >= 1.0) { // margen aquí también
             puts("Ponderacion total completada para esta encuesta");
             break;
         }
     }
 }
-
 
 Pregunta* insertarPregunta(Pregunta *p, Pregunta *r) {
     if (r == NULL || p->Pregunta_Id < r->Pregunta_Id) {
