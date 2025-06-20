@@ -991,7 +991,7 @@ void crearRespuesta(Respuesta **l, Pregunta *pl, int uno, long long idPreg){ //e
 			}
 			aux = aux->sgte;
 		}
-		p->Respuesta_Nro = aux->Respuesta_Nro + 1;
+		p->Respuesta_Nro = n + 1;
 	}
 	
 	//cargar la ponderacion
@@ -1090,7 +1090,7 @@ void mostrarRespuestas(Respuesta *l) {
 
         printf("--------------------------------------------------------------------------------------------------------------\n");
     } else {
-        printf("La lista está vacía\n");
+        printf("La lista esta vacia\n");
     }
 }
 
@@ -1168,12 +1168,12 @@ void preBorrar(Respuesta **l, long long id, Respuesta *r, Pregunta *pl){
         			temp = temp->sgte;
     			}while (temp != *l);
     			if(cont > 1){
-    				printf("Se esta eliminando la unica respuesta con ponderación 1 para esta pregunta.\n");
-      				printf("Se creará automáticamente otra con ponderación 1.\n");
+    				printf("Se esta eliminando la unica respuesta con ponderacion 1 para esta pregunta.\n");
+      				printf("Se creara automáticamente otra con ponderacion 1.\n");
        				crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
        				borrarRespuesta(&(*l),id,*l);
 				}else{
-					printf("Se Esta eliminando la unica respuesta de la pregunta %lld con ponderación 1.\n", aux->Pregunta_Id);
+					printf("Se Esta eliminando la unica respuesta de la pregunta %lld con ponderacion 1.\n", aux->Pregunta_Id);
 					printf("¿Desea eliminarla igual? (1 = si| otro = no):\n");
 					fflush(stdin);
 					scanf("%d",&opc);
@@ -1181,7 +1181,7 @@ void preBorrar(Respuesta **l, long long id, Respuesta *r, Pregunta *pl){
 						borrarRespuesta(&(*l),id,*l);
 						printf("Respuesta eliminada.\n");
 					}else{
-						printf("Se canceló la eliminación.\n");
+						printf("Se cancelo la eliminacion.\n");
 					}
 				}
 			}else{
@@ -1200,12 +1200,12 @@ void preBorrar(Respuesta **l, long long id, Respuesta *r, Pregunta *pl){
         					temp = temp->sgte;
     					}while (temp != *l);
     					if(cont > 1){
-    						printf("Se esta eliminando la unica respuesta con ponderación 1 para esta pregunta.\n");
-      						printf("Se creará automáticamente otra con ponderación 1.\n");
+    						printf("Se esta eliminando la unica respuesta con ponderacion 1 para esta pregunta.\n");
+      						printf("Se creara automaticamente otra con ponderacion 1.\n");
        						crearRespuesta(&(*l),pl,1,aux->Pregunta_Id);
        						borrarRespuesta(&(*l),id,*l);
 						}else{
-							printf("Se Esta eliminando la unica respuesta de la pregunta %lld con ponderación 1.\n", aux->Pregunta_Id);
+							printf("Se Esta eliminando la unica respuesta de la pregunta %lld con ponderacion 1.\n", aux->Pregunta_Id);
 							printf("¿Desea eliminarla igual? (1 = si| otro = no):\n");
 							fflush(stdin);
 							scanf("%d",&opc);
@@ -1213,7 +1213,7 @@ void preBorrar(Respuesta **l, long long id, Respuesta *r, Pregunta *pl){
 								borrarRespuesta(&(*l),id,*l);
 								printf("Respuesta eliminada.\n");
 							}else{
-								printf("Se canceló la eliminación.\n");
+								printf("Se cancelo la eliminacion.\n");
 							}
 						}
 					}else{
