@@ -729,10 +729,10 @@ void mostrarPregunta(Pregunta *l) { // ?
     printf("--- FIN DE LOS ID PREGUNTAS EXISTENTES ---\n");
 }
 
-void modificarPregunta(Pregunta **l, long long id, Encuesta *e) { //
+void modificarPregunta(Pregunta **l, long long id, Encuesta *e) {
     Pregunta *actual = *l;
 
-    // Buscar pregunta por ID
+    // Buscar la pregunta a modificar
     while (actual != NULL && actual->Pregunta_Id != id)
         actual = actual->sgte;
 
@@ -760,48 +760,121 @@ void modificarPregunta(Pregunta **l, long long id, Encuesta *e) { //
     float nuevaPond;
     scanf("%f", &nuevaPond);
 
-    if (nuevaPond < 0.01 || nuevaPond > maxPermitido) {
-        puts("Ponderación inválida.");
+    // Aplicar EPSILON consistentemente en las comparaciones
+    if (nuevaPond < 0.01 - EPSILON || nuevaPond > maxPermitido + EPSILON) {
+        printf("Error: La ponderacion debe ser entre 0.01 y %.2f\n", maxPermitido);
         return;
     }
 
+    float diferencia = actual->Ponderacion - nuevaPond;
     actual->Ponderacion = nuevaPond;
-    puts("Pregunta modificada correctamente.");
+    puts("Pregunta modificada.");
 
-    float sumaTotal = sumaOtras + nuevaPond;
-    if (sumaTotal < 1.0) {
-        printf("\nLa suma total de ponderaciones es %.2f (debe ser 1.0).\n", sumaTotal);
-
-        int opcion;
-        do {
-            puts("\nElija una accion para compensar:");
-            puts("1. Modificar otra pregunta existente");
-            puts("2. Insertar nueva pregunta");
-            puts("3. Cancelar (dejar inconsistente)");
-
+    if (diferencia > EPSILON) {
+        printf("Debe compensar la diferencia de ponderacion de %.2f para que la encuesta sume 1.0\n", diferencia);
+        while (diferencia > EPSILON) {
+            printf("Faltante actual de ponderacion: %.2f\n", diferencia);
+            puts("Elija una opcion:");
+            puts("1) Modificar otra pregunta existente de la MISMA encuesta");
+            puts("2) Insertar nueva pregunta para esta encuesta");
+            puts("3) Cancelar (quedara inconsistente)");
             printf("Opcion: ");
-            scanf("%d", &opcion);
+            int op;
+            scanf("%d", &op);
 
-            if (opcion == 1) {
-                long long otroId;
-                printf("Ingrese ID de la otra pregunta a modificar: (Que sea de la misma encuesta) "); // 
-                scanf("%lld", &otroId);
-
-                if (otroId == id) {
-                    puts("No puedes elegir la misma pregunta.");
-                } else {
-                    modificarPregunta(l, otroId, e);  // llamada recursiva segura
+            if (op == 1) {
+                printf("Preguntas disponibles para modificar:\n");
+                Pregunta *otra = *l;
+                while (otra != NULL) {
+                    if (otra->Encuesta_Id == actual->Encuesta_Id && otra != actual)
+                        printf("ID: %lld | Texto: %s | Ponderacion: %.2f\n", 
+                              otra->Pregunta_Id, otra->Pregunta, otra->Ponderacion);
+                    otra = otra->sgte;
                 }
 
-            } else if (opcion == 2) { // 
-                crearPregunta(l, e);  // usar función ya hecha
-            } else if (opcion == 3) {
-                puts("Advertencia: Ponderación total incompleta.");
-            } else {
-                puts("Opción inválida.");
-            }
+                long long idOtra;
+                printf("Ingrese ID de la pregunta a modificar: ");
+                scanf("%lld", &idOtra);
 
-        } while (opcion != 1 && opcion != 2 && opcion != 3);
+                otra = *l;
+                while (otra != NULL && otra->Pregunta_Id != idOtra)
+                    otra = otra->sgte;
+
+                if (otra == NULL || otra->Encuesta_Id != actual->Encuesta_Id) {
+                    puts("ID de pregunta no valido o pertenece a otra encuesta.");
+                    continue;
+                }
+
+                printf("Ingrese nueva ponderacion para ID %lld (actual %.2f, max %.2f): ", 
+                      otra->Pregunta_Id, otra->Ponderacion, otra->Ponderacion + diferencia);
+                float nuevaPondOtra;
+                scanf("%f", &nuevaPondOtra);
+
+                if (nuevaPondOtra < 0.01 - EPSILON || nuevaPondOtra > otra->Ponderacion + diferencia + EPSILON) {
+                    printf("Error: La ponderacion debe ser al menos 0.01 y como maximo %.2f\n", 
+                          otra->Ponderacion + diferencia);
+                    continue;
+                }
+
+                diferencia -= (nuevaPondOtra - otra->Ponderacion);
+                otra->Ponderacion = nuevaPondOtra;
+                printf("Pregunta ID %lld actualizada. Faltante restante: %.2f\n", 
+                      otra->Pregunta_Id, diferencia > EPSILON ? diferencia : 0.0);
+                
+                if (diferencia <= EPSILON) {
+                    puts("Ponderacion total de la encuesta completada.");
+                    break;
+                }
+
+            } else if (op == 2) {
+                Pregunta *nueva = (Pregunta *)malloc(sizeof(Pregunta));
+                if (nueva == NULL) {
+                    puts("No hay memoria.");
+                    return;
+                }
+
+                nueva->Encuesta_Id = actual->Encuesta_Id;
+                long long nuevoID = 1;
+                aux = *l;
+                while (aux != NULL) {
+                    if (aux->Pregunta_Id >= nuevoID)
+                        nuevoID = aux->Pregunta_Id + 1;
+                    aux = aux->sgte;
+                }
+                nueva->Pregunta_Id = nuevoID;
+
+                fflush(stdin);
+                printf("Ingrese texto para la nueva pregunta: ");
+                fgets(nueva->Pregunta, 50, stdin);
+                nueva->Pregunta[strcspn(nueva->Pregunta, "\n")] = '\0';
+
+                printf("Ingrese ponderacion para la nueva pregunta (0.01 a %.2f): ", diferencia);
+                scanf("%f", &nueva->Ponderacion);
+
+                if (nueva->Ponderacion < 0.01 - EPSILON || nueva->Ponderacion > diferencia + EPSILON) {
+                    printf("Error: La ponderacion debe ser entre 0.01 y %.2f\n", diferencia);
+                    free(nueva);
+                    continue;
+                }
+
+                diferencia -= nueva->Ponderacion;
+                nueva->sgte = *l;
+                *l = nueva;
+                printf("Nueva pregunta ID %lld creada. Faltante restante: %.2f\n", 
+                      nueva->Pregunta_Id, diferencia > EPSILON ? diferencia : 0.0);
+                
+                if (diferencia <= EPSILON) {
+                    puts("Ponderacion total de la encuesta completada.");
+                    break;
+                }
+
+            } else if (op == 3) {
+                puts("Atencion: La encuesta queda con ponderacion inconsistente.");
+                break;
+            } else {
+                puts("Opcion invalida.");
+            }
+        }
     }
 }
 
