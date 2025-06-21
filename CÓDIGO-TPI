@@ -643,6 +643,13 @@ void crearPregunta(Pregunta **l, Encuesta *e) {
             sumaPonderacion += temp->Ponderacion;
         temp = temp->sgte;
     }
+    
+     // Verificar si ya está completa la ponderación
+    if (sumaPonderacion + EPSILON >= 1.0) {
+        printf("Esta encuesta (ID: %lld) ya tiene la ponderacion completa (%.2f/1.00).\n", eid, sumaPonderacion);
+        puts("No se pueden agregar mas preguntas.");
+        return;
+    }
 
     while (sumaPonderacion + EPSILON < 1.0) { // margen aquí
         p = (Pregunta *)malloc(sizeof(Pregunta));
